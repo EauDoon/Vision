@@ -5,6 +5,7 @@ Never reads the operator's database or calls a live RPC. See docs/UI-TESTS.md.
 """
 from __future__ import annotations
 
+import argparse
 import copy
 import json
 import os
@@ -93,7 +94,24 @@ def exercise_index_states(page, expect, base):
     page.reload()
 
 
+def capture_screens(page, out):
+    out.mkdir(parents=True, exist_ok=True)
+    for name, width, height in (("desktop", 1440, 900), ("mobile", 390, 844)):
+        page.set_viewport_size({"width": width, "height": height})
+        page.evaluate("window.scrollTo(0, 0)")
+        page.screenshot(path=str(out / (name + "-viewport.png")))
+        page.screenshot(path=str(out / (name + ".png")), full_page=True)
+    page.set_viewport_size({"width": 1440, "height": 1050})
+
+
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--app-root", type=Path, default=ROOT, help="Checkout to serve on loopback.")
+    parser.add_argument("--capture-only", action="store_true", help="Capture the initial dashboard at both widths.")
+    args = parser.parse_args()
+    destination = os.getenv("VISION_UI_SCREENSHOTS")
+    if args.capture_only and not destination:
+        parser.error("--capture-only needs VISION_UI_SCREENSHOTS")
     try:
         from playwright.sync_api import sync_playwright, expect
     except ImportError:
@@ -103,7 +121,7 @@ def main():
         env.pop("VISION_RPC_URL", None)
         env.pop("VISION_DB", None)
         proc = subprocess.Popen(
-            [sys.executable, "-u", str(ROOT / "app.py"), "--port", "0", "--db", str(Path(temp) / "test.sqlite3")],
+            [sys.executable, "-u", str(args.app_root / "app.py"), "--port", "0", "--db", str(Path(temp) / "test.sqlite3")],
             stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, env=env,
         )
         try:
@@ -131,11 +149,10 @@ def main():
                     expect(page.locator("#event-rows tr")).to_have_count(6)
                     expect(page.locator("#connection")).to_contain_text("RPC not configured")
                     expect(page.locator("#event-rows")).to_contain_text("SYNTHETIC")
-                    if os.getenv("VISION_UI_SCREENSHOTS"):
-                        out = Path(os.environ["VISION_UI_SCREENSHOTS"])
-                        out.mkdir(parents=True, exist_ok=True)
-                        page.screenshot(path=str(out / "desktop.png"), full_page=True)
-                        page.screenshot(path=str(out / "desktop-viewport.png"))
+                    if destination:
+                        capture_screens(page, Path(destination))
+                    if args.capture_only:
+                        return
                     page.get_by_role("link",name="Read the fictional case").click()
                     expect(page.get_by_role("heading",level=1)).to_contain_text("actually a gain")
                     page.get_by_text("Inspect the four fixture records and their price sources").click()
@@ -226,10 +243,6 @@ def main():
                     page.locator('[data-view="explore"]').click()
                     page.locator("#load-demo").click()
                     expect(page.locator("#event-rows tr")).to_have_count(6)
-                    if os.getenv("VISION_UI_SCREENSHOTS"):
-                        page.evaluate("window.scrollTo(0, 0)")
-                        page.screenshot(path=str(out / "mobile.png"), full_page=True)
-                        page.screenshot(path=str(out / "mobile-viewport.png"))
                     with page.expect_download() as event:
                         page.locator(".export-search").click()
                     index = json.loads(Path(event.value.path()).read_text())
