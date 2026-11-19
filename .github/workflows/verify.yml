@@ -37,55 +37,12 @@ jobs:
           google-chrome --version
           python3 -m venv "$RUNNER_TEMP/vision-browser"
           "$RUNNER_TEMP/vision-browser/bin/pip" install --disable-pip-version-check --only-binary=:all: playwright==1.65.2
-      - name: Check out the pre-design revision for the visual comparison
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          ref: c66c33b5afdd4b34b1fd8c739238bd0db981f04b
-          path: .ui-comparison-base
-          persist-credentials: false
-      - name: Capture the same initial dashboard on the base revision
-        env:
-          VISION_TEST_CHROMIUM: /usr/bin/google-chrome
-          VISION_UI_SCREENSHOTS: ${{ runner.temp }}/vision-screens/before
-        run: |
-          "$RUNNER_TEMP/vision-browser/bin/python" tests/ui_smoke.py --app-root .ui-comparison-base --capture-only
       - name: Run the loopback UI smoke test
         env:
           VISION_TEST_CHROMIUM: /usr/bin/google-chrome
           VISION_UI_SCREENSHOTS: ${{ runner.temp }}/vision-screens/after
         run: |
           "$RUNNER_TEMP/vision-browser/bin/python" tests/ui_smoke.py
-      - name: Prepare the synthetic screenshots for this design review
-        if: ${{ !cancelled() }}
-        run: |
-          "$RUNNER_TEMP/vision-browser/bin/python" - <<'PY'
-          import base64
-          import pathlib
-          import os
-          from playwright.sync_api import sync_playwright
-          playwright = sync_playwright().start()
-          browser = playwright.chromium.launch(executable_path="/usr/bin/google-chrome")
-          page = browser.new_page()
-          for path in sorted((pathlib.Path(os.environ["RUNNER_TEMP"]) / "vision-screens").glob("*/*-viewport.png")):
-              name = path.parent.name + "-" + path.stem
-              src = "data:image/png;base64," + base64.b64encode(path.read_bytes()).decode()
-              payload = page.evaluate("""async src => {
-                  const image = new Image();
-                  image.src = src;
-                  await image.decode();
-                  const canvas = document.createElement('canvas');
-                  const ratio = Math.min(1, 900 / image.width);
-                  canvas.width = Math.round(image.width * ratio);
-                  canvas.height = Math.round(image.height * ratio);
-                  canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height);
-                  return canvas.toDataURL('image/webp', .75).split(',')[1];
-              }""", src)
-              print(f"VISION_FRAME {name} {len(base64.b64decode(payload))}", flush=True)
-              for start in range(0, len(payload), 2048):
-                  print(f"VISION_CHUNK {name} {start} {payload[start:start+2048]}", flush=True)
-          browser.close()
-          playwright.stop()
-          PY
       - name: Save the desktop and mobile renders
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
