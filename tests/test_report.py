@@ -47,6 +47,16 @@ class FieldNote(unittest.TestCase):
             self.assertIn(value,html)
         self.assertIn('No wallet ownership',html)
 
+    def test_reward_income_is_reproducible_in_both_reports(self):
+        data = demo_case()
+        reward = next(event for event in data['events'] if event['kind'] == 'income')
+        reward.update(quantity='0.2', unit_price='1600')
+        with patch('report.demo_case', return_value=data):
+            pages = outputs()
+        for name in ('report.html', 'vision-field-note.html'):
+            self.assertIn('0.2 units × $1,600 per unit = $320', pages[name])
+            self.assertIn('<code>reward-4</code>', pages[name])
+
     def test_unresolved_basis_withholds_report(self):
         data = demo_case()
         data['events'][0].pop('price_source')

@@ -22,3 +22,32 @@ jobs:
         run: python3 -m unittest discover -s tests -v
       - name: Check the generated report
         run: python3 report.py --check
+
+  browser:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - name: Check out the exact revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Set up the browser tests
+        run: |
+          google-chrome --version
+          python3 -m venv "$RUNNER_TEMP/vision-browser"
+          "$RUNNER_TEMP/vision-browser/bin/pip" install --disable-pip-version-check --only-binary=:all: playwright==1.65.2
+      - name: Run the loopback UI smoke test
+        env:
+          VISION_TEST_CHROMIUM: /usr/bin/google-chrome
+          VISION_UI_SCREENSHOTS: ${{ runner.temp }}/vision-screens/after
+        run: |
+          "$RUNNER_TEMP/vision-browser/bin/python" tests/ui_smoke.py
+      - name: Save the desktop and mobile renders
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: vision-ui-renders
+          path: ${{ runner.temp }}/vision-screens
+          retention-days: 7
+          if-no-files-found: warn
