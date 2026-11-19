@@ -81,6 +81,9 @@ class Workbench(unittest.TestCase):
         self.assertEqual(checksum,digest(e))
         self.assertEqual(e['crawl_windows'][0]['blocks'][0]['hash'],H)
         self.assertEqual(len(e['snapshot']['events']),2)
+        window_id = e['crawl_windows'][0]['scan_id']
+        self.assertEqual(e['event_witnesses'], {event['id']:window_id for event in found})
+        self.assertEqual(len(e['crawl_windows'][0]['events_sha256']), 64)
 
     def test_04_unconfigured_validation_and_origin(self):
         self.assertEqual(self.req('/api/crawl',dict(address='bad',blocks=1))[0],400)
