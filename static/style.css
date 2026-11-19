@@ -50,7 +50,7 @@ p { color: var(--muted); line-height: 1.55; }
 .section-head, .panel-title { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .section-head { margin-bottom: 18px; }
 label { display: block; font-size: 13px; font-weight: 600; margin: 14px 0 6px; }
-input, select, textarea { width: 100%; min-width: 0; border: 1px solid #899c8e; background: var(--paper); color: var(--ink); border-radius: 4px; padding: 11px 12px; }
+input, select, textarea { width: 100%; min-width: 0; border: 1px solid #768b7c; background: var(--paper); color: var(--ink); border-radius: 4px; padding: 11px 12px; }
 input::placeholder, textarea::placeholder { color: #627168; opacity: 1; }
 textarea { resize: vertical; }
 .primary, .secondary { min-height: 44px; border: 1px solid var(--pine); border-radius: 4px; padding: 10px 16px; font-size: 14px; font-weight: 600; }
@@ -97,8 +97,8 @@ td .pill { font-size: 10px; }
 .route div { display: flex; align-items: baseline; gap: 5px; margin-bottom: 5px; }
 .route span { min-width: 26px; color: var(--muted); font-size: 11px; }
 code, pre { font-family: var(--mono); }
-.route code, .record-button { font-size: 11px; }
-.record-button { padding: 0; text-align: left; min-height: 26px; font-family: var(--mono); overflow-wrap: anywhere; }
+.route code { font-size: 11px; }
+.record-button { padding: 0; text-align: left; min-height: 28px; font-size: 13px; font-weight: 600; overflow-wrap: anywhere; }
 .export-search, .export-help { margin-inline: 18px; }
 .export-help { margin-bottom: 12px; }
 .crawl-panel > p, .case-grid .panel > p, .simulation-panel p, .scope-grid p { font-size: 14px; margin: 10px 0; }

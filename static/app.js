@@ -29,7 +29,8 @@ function cell(value, className) {
 }
 
 function sourceButton(event) {
-  const button = text('button', short(event.tx_hash), 'record-button');
+  const button = text('button', 'Inspect record', 'record-button');
+  button.title = event.tx_hash || '';
   button.type = 'button';
   button.setAttribute('aria-label', 'Inspect ' + (event.kind || 'transfer').replaceAll('_', ' ') +
     ' in block ' + event.block_number + ', transaction ' + event.tx_hash);
