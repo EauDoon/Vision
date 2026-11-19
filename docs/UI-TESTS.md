@@ -32,7 +32,8 @@ To save optional desktop and mobile screenshots outside the repository:
 VISION_UI_SCREENSHOTS=/tmp/vision-ui-screenshots python tests/ui_smoke.py
 ```
 
-The capture includes the initial viewport and full page at 1440 × 900 and 390 × 844.
+The suite captures the explorer and Vault review at 1440 × 900 and 390 × 844,
+including the initial viewport and the full page. Vault filenames begin with `vault-`.
 To capture another local checkout with the same framing, pass its directory:
 
 ```sh
@@ -59,8 +60,9 @@ Checks include:
 - Missing-RPC crawl error, with no fabricated success records.
 - Fictional calculation, unsaved what-if preview, and unchanged baseline evidence.
 - Saved synthetic review and downloaded JSON evidence.
+- Balancer Vault decisions, transfer rows, filter counts and final header check. With the packet endpoint then unavailable, the actual download must match the preview and original response byte for byte. The suite checks the displayed digest and runs the offline verifier on the downloaded file.
 - Hash navigation and browser Back.
-- Horizontal overflow at 1440, 768, 390, and 320 pixels, across all four views.
+- Horizontal overflow at 1440, 768, 390, and 320 pixels across the dashboard views.
 - Uncaught browser JavaScript errors.
 
 This is a smoke test, not a full accessibility audit, visual regression suite,
@@ -70,7 +72,7 @@ Screenshot capture alone is not a visual pass: inspect the saved images manually
 ## Continuous integration
 
 The Verify Vision workflow checks out the pull request head and runs the Python
-suite, the report generator's byte-for-byte check, and the loopback browser
+suite, the report generator's byte-for-byte check, dashboard JavaScript syntax, and the loopback browser
 suite. The browser job uses the Ubuntu runner's Google Chrome and a pinned
 Playwright installation. Its `vision-ui-renders` artifact retains the desktop
 and mobile captures for seven days.

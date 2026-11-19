@@ -1,4 +1,4 @@
-"""Vision 1.1.0 | local-only read-only chain exploration and fictional case review."""
+"""Vision | local Ethereum evidence workbench."""
 import argparse
 import json
 import os
@@ -10,8 +10,9 @@ from urllib.parse import parse_qs, urlsplit
 from chain import ChainError, crawl, normalize_address
 from reconcile import demo_case, reconcile
 from store import DEMO_ADDRESS, Store, digest, encode
+from transfer_review import build_packet
 
-VERSION = "1.1.0"
+VERSION = "1.2.0"
 STATIC = Path(__file__).resolve().parent / "static"
 FILES = {"/":("index.html","text/html; charset=utf-8"),"/index.html":("index.html","text/html; charset=utf-8"),
          "/static/app.js":("app.js","text/javascript; charset=utf-8"),"/static/style.css":("style.css","text/css; charset=utf-8")}
@@ -116,6 +117,12 @@ class Handler(BaseHTTPRequestHandler):
             return self.json(200,db.search(q))
         if not write and path=="/api/scans":
             return self.json(200,{"scans":db.scans()})
+        if not write and path == "/api/transfer-review":
+            if url.query:
+                raise Problem(400, "This review covers three fixed blocks and accepts no parameters.")
+            # Preserve this readable serialization for the browser preview and its download.
+            body = json.dumps(build_packet(), indent=2, ensure_ascii=False, allow_nan=False) + "\n"
+            return self.send_data(200, body.encode(), "application/json; charset=utf-8")
         if not write and path=="/api/case":
             return self.json(200,self.server.case())
         if not write and path=="/api/evidence":

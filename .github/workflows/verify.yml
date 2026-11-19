@@ -22,6 +22,8 @@ jobs:
         run: python3 -m unittest discover -s tests -v
       - name: Check the generated report
         run: python3 report.py --check
+      - name: Check the dashboard JavaScript
+        run: node --check static/app.js
 
   browser:
     runs-on: ubuntu-24.04
