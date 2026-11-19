@@ -9,6 +9,8 @@ from contextlib import contextmanager
 from datetime import datetime, timezone
 from pathlib import Path
 
+from chain import MAX_EVENTS
+
 ADDRESS = re.compile(r"0x[0-9a-f]{40}", re.I)
 HASH = re.compile(r"0x[0-9a-f]{64}", re.I)
 DEMO_ADDRESS = "0x" + "11" * 20
@@ -41,6 +43,62 @@ def encode(obj):
 
 def digest(obj):
     return hashlib.sha256(encode(obj).encode()).hexdigest()
+
+
+def event_digest(events):
+    ordered = sorted(events, key=lambda event: event["id"])
+    return digest([[event[field] for field in FIELDS] for event in ordered])
+
+
+def _saved_parent(db, block):
+    if block["parent_hash"] is not None:
+        return block["parent_hash"]
+    # v1.1 kept the parent in each scan's JSON, before the column existed.
+    parents = set()
+    rows = db.execute("SELECT record FROM scans WHERE from_block<=? AND to_block>=?",
+                      (block["height"], block["height"]))
+    for row in rows:
+        try:
+            for item in json.loads(row["record"])["blocks"]:
+                if (item["number"], item["hash"]) == (block["height"], block["hash"]):
+                    parent = item["parent_hash"]
+                    if isinstance(parent, str) and HASH.fullmatch(parent):
+                        parents.add(parent)
+        except (KeyError, TypeError, ValueError):
+            continue
+    if len(parents) > 1:
+        raise ValueError("Conflicting parent hashes in previous scan evidence.")
+    return next(iter(parents), None)
+
+
+def validate_blocks(db, blocks, first, last, *, require_saved=False):
+    if (type(first) is not int or type(last) is not int or not 0 <= first <= last <= 2**53-1
+            or last-first >= 64 or len(blocks) != last-first+1):
+        raise ValueError("Invalid scan window.")
+    saved = {row["height"]: row for row in db.execute(
+        "SELECT height,hash,parent_hash FROM blocks WHERE height BETWEEN ? AND ?", (first-1, last+1))}
+    previous = saved[first-1]["hash"] if first-1 in saved else None
+    for height, block in enumerate(blocks, first):
+        if type(block["number"]) is not int or block["number"] != height:
+            raise ValueError("Scan omitted or reordered a block.")
+        current, parent = block["hash"], block["parent_hash"]
+        if not all(isinstance(h, str) and HASH.fullmatch(h) for h in (current, parent)):
+            raise ValueError("Invalid block header hashes.")
+        if previous is not None and previous != parent:
+            raise ValueError("Parent hash disagrees with preceding block; window withheld.")
+        row = saved.get(height)
+        if require_saved and row is None:
+            raise ValueError("Missing stored block.")
+        if row is not None:
+            if row["hash"] != current:
+                raise ValueError("Conflicting finalized block hash; index unchanged.")
+            known_parent = _saved_parent(db, row)
+            if known_parent is not None and known_parent != parent:
+                raise ValueError("Conflicting parent for the same finalized block.")
+        previous = current
+    successor = saved.get(last+1)
+    if successor is not None and _saved_parent(db, successor) != previous:
+        raise ValueError("Following block has a missing or conflicting parent; verify its window.")
 
 
 def sample_events():
@@ -87,10 +145,13 @@ class Store:
                 CREATE TABLE IF NOT EXISTS scan_events (
                     scan_id INTEGER NOT NULL, event_id TEXT NOT NULL, PRIMARY KEY (scan_id,event_id));
                 CREATE INDEX IF NOT EXISTS event_witness ON scan_events(event_id,scan_id);
-                CREATE TABLE IF NOT EXISTS blocks (height INTEGER PRIMARY KEY, hash TEXT NOT NULL);
+                CREATE TABLE IF NOT EXISTS blocks (height INTEGER PRIMARY KEY, hash TEXT NOT NULL, parent_hash TEXT);
                 CREATE TABLE IF NOT EXISTS reviews (
                     id INTEGER PRIMARY KEY, case_hash TEXT NOT NULL, decision TEXT NOT NULL,note TEXT NOT NULL, at TEXT NOT NULL);
             """)
+            db.execute("BEGIN IMMEDIATE")
+            if "parent_hash" not in {row["name"] for row in db.execute("PRAGMA table_info(blocks)")}:
+                db.execute("ALTER TABLE blocks ADD COLUMN parent_hash TEXT")
             db.executemany("INSERT OR IGNORE INTO labels VALUES(?,?,?,?,?)", LABELS)
             for event in sample_events():
                 self.insert_event(db, "synthetic", event)
@@ -152,18 +213,25 @@ class Store:
         if type(result["chain_id"]) is not int or result["chain_id"] != 1:
             raise ValueError("Only Ethereum mainnet observations can be indexed.")
         blocks = result["blocks"]
+        events = result["events"]
+        if not isinstance(events, list) or len(events) > MAX_EVENTS:
+            raise ValueError("Invalid scan event count.")
         recorded = {"dataset":"live","chain_id":result["chain_id"],"address":address,"from_block":first,
                     "to_block":last,"coverage":result["coverage"],"blocks":blocks,
-                    "events":len(result["events"]), "at":now(),"provider":result.get("provider","unspecified RPC"),
+                    "events":len(events), "events_sha256":event_digest(events), "at":now(),"provider":result.get("provider","unspecified RPC"),
                     "provider_finalized_block":result.get("provider_finalized_block")}
         with self.db() as db:
-            for b in blocks:
-                n, h = b["number"], b["hash"]
-                row = db.execute("SELECT hash FROM blocks WHERE height=?",(n,)).fetchone()
-                if row and row[0] != h:
-                    raise ValueError("Conflicting finalized block hash; index unchanged. Verify provider.")
-                db.execute("INSERT OR IGNORE INTO blocks VALUES(?,?)",(n,h))
-            for e in result["events"]:
+            # The dashboard and CLI can write the same index from separate processes.
+            db.execute("BEGIN IMMEDIATE")
+            validate_blocks(db, blocks, first, last)
+            headers = {b["number"]: b["hash"] for b in blocks}
+            db.executemany("INSERT INTO blocks(height,hash,parent_hash) VALUES(?,?,?) "
+                           "ON CONFLICT(height) DO UPDATE SET parent_hash=excluded.parent_hash",
+                           ((b["number"], b["hash"], b["parent_hash"]) for b in blocks))
+            for e in events:
+                if (e["block_number"] not in headers or headers[e["block_number"]] != e["block_hash"]
+                        or address not in (e["from_address"], e["to_address"])):
+                    raise ValueError("Event does not belong to the recorded account and block window.")
                 self.insert_event(db,"live",e)
             scan_id=db.execute("INSERT INTO scans(address,from_block,to_block,scan_time,record) VALUES(?,?,?,?,?)",
                                (address,first,last,recorded["at"],encode(recorded))).lastrowid
@@ -178,19 +246,24 @@ class Store:
     def search_export(self,q):
         page=self.search(q)
         with self.db() as db:
-            relevant={}
-            def add(rows):
-                for row in rows:
-                    relevant[row["id"]]=json.loads(row["record"])
+            relevant = {}
+            witnesses = {}
+            def add(row):
+                relevant[row["id"]] = {**json.loads(row["record"]), "scan_id": row["id"]}
             norm=q.strip().lower().removeprefix("eip155:1:")
             if ADDRESS.fullmatch(norm):
-                add(db.execute("SELECT id,record FROM scans WHERE address=? ORDER BY id DESC LIMIT 50",(norm,)))
+                for row in db.execute("SELECT id,record FROM scans WHERE address=? ORDER BY id DESC LIMIT 50",(norm,)):
+                    add(row)
             for event in page["events"]:
                 if event["dataset"]!="live": continue
-                add(db.execute("SELECT id,record FROM scans JOIN scan_events ON scan_id=id "
-                               "WHERE event_id=? ORDER BY id DESC LIMIT 1",(event["id"],)))
+                row = db.execute("SELECT id,record FROM scans JOIN scan_events ON scan_id=id "
+                                 "WHERE event_id=? ORDER BY id DESC LIMIT 1",(event["id"],)).fetchone()
+                witnesses[event["id"]] = row["id"] if row is not None else None
+                if row is not None:
+                    add(row)
         body={"schema":"vision/index-extract@1","query":q,"snapshot":page,"crawl_windows":list(relevant.values()),
-              "scope":"At most 100 matching events; recent coverage for searched accounts and a witnessing window per live event. Synthetic fixtures never came from an RPC provider."}
+              "event_witnesses":witnesses,
+              "scope":"At most 100 matching events; recent coverage for searched accounts. Live event IDs map to witnessing scan IDs, or null for missing lineage. Synthetic fixtures never came from an RPC provider."}
         return {**body,"sha256":digest(body)}
 
     def reviews(self, case_hash):

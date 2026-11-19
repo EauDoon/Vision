@@ -4,8 +4,8 @@ import json
 import os
 import time
 
-from chain import ChainError, HASH, _endpoint, crawl, normalize_address
-from store import Store
+from chain import ChainError, MAX_EVENTS, _endpoint, crawl, normalize_address
+from store import Store, event_digest, validate_blocks
 
 MAX_BLOCKS = 128
 LIMITS = ('Ethereum mainnet, finalized blocks only. At most 128 inclusive blocks per invocation, '
@@ -27,28 +27,33 @@ def _bounds(start, end, window, retries):
 
 
 def _checkpoint(store, address, first, last):
-    """Accept only an exact successful scan backed by every persisted block hash."""
+    """Reuse exact durable headers and event witnesses from one database snapshot."""
     with store.db() as db:
-        rows = db.execute('SELECT record FROM scans WHERE address=? AND from_block=? AND to_block=? ORDER BY id DESC', (address, first, last))
+        db.execute('BEGIN')
+        rows = db.execute('SELECT id,record FROM scans WHERE address=? AND from_block=? AND to_block=? ORDER BY id DESC', (address, first, last))
         for row in rows:
             try:
-                record = json.loads(row[0])
+                record = json.loads(row['record'])
                 if not isinstance(record, dict) or type(record.get('chain_id')) is not int:
                     continue
                 if (record.get('dataset'), record.get('chain_id'), record.get('address'), record.get('from_block'), record.get('to_block')) != ('live', 1, address, first, last):
                     continue
-                blocks = record['blocks']
-                if len(blocks) != last-first+1 or [b['number'] for b in blocks] != list(range(first, last+1)):
+                validate_blocks(db, record['blocks'], first, last, require_saved=True)
+                count = record.get('events')
+                if type(count) is not int or not 0 <= count <= MAX_EVENTS:
                     continue
-                if any(not isinstance(b.get('hash'), str) or not HASH.fullmatch(b['hash']) for b in blocks):
+                linked = db.execute("SELECT e.* FROM scan_events w LEFT JOIN events e "
+                                    "ON e.dataset='live' AND e.id=w.event_id "
+                                    "WHERE w.scan_id=? LIMIT ?", (row['id'], count+1)).fetchall()
+                if len(linked) != count or any(event['id'] is None for event in linked):
                     continue
-                if type(record.get('events')) is not int or record['events'] < 0:
+                # Legacy nonempty windows must reobserve the records once to bind exact rows.
+                expected = record.get('events_sha256')
+                if expected is None:
+                    if count:
+                        continue
+                elif event_digest(linked) != expected:
                     continue
-                persisted = {r['height']:r['hash'] for r in db.execute('SELECT height,hash FROM blocks WHERE height BETWEEN ? AND ?', (first,last))}
-                if any(persisted.get(b['number']) != b['hash'] for b in blocks):
-                    continue
-                # Presence of a scan is the commit marker: Store.record_scan writes
-                # events, blocks and scan in a single transaction. No new marker file.
                 return True
             except (ValueError, KeyError, TypeError, AttributeError):
                 continue

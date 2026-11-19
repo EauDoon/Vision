@@ -1,13 +1,17 @@
 import contextlib
 import io
+import json
+import sqlite3
+from concurrent.futures import ThreadPoolExecutor
+from threading import Barrier
 import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from backfill import run_backfill, main
+from backfill import _checkpoint, run_backfill, main
 from chain import ChainError
-from store import Store
+from store import Store, sample_events
 
 A='0x'+'1'*40
 B='0x'+'2'*40
@@ -98,9 +102,74 @@ class BackfillTests(unittest.TestCase):
         self.assertEqual(self.run_fill(crawler=bad)['status'],'failed')
         self.assertEqual(self.store.scans(),[])
     def test_conflict_stops_no_checkpoint(self):
-        with self.store.db() as db: db.execute('INSERT INTO blocks VALUES(?,?)',(10,'wrong-hash'))
+        with self.store.db() as db: db.execute('INSERT INTO blocks(height,hash) VALUES(?,?)',(10,'wrong-hash'))
         self.assertEqual(self.run_fill()['status'],'failed')
         self.assertEqual(self.store.scans(),[])
+    def test_both_window_edges_and_atomic_failure(self):
+        self.assertEqual(self.run_fill(start=15, end=17)['status'], 'complete')
+        self.assertEqual(self.run_fill(start=12, end=14)['status'], 'complete')
+        self.assertEqual(self.run_fill(start=18, end=20)['status'], 'complete')
+        before = self.store.status()
+        left = self.crawler(A, start=11, end=11)
+        left['blocks'][0]['hash'] = '0x' + 'a'*64
+        right = self.crawler(A, start=21, end=22)
+        right['blocks'][0]['parent_hash'] = '0x' + 'b'*64
+        for window in (left, right):
+            with self.assertRaises(ValueError):
+                self.store.record_scan(window)
+            self.assertEqual(self.store.status(), before)
+        with self.store.db() as db:
+            self.assertEqual([r[0] for r in db.execute('SELECT height FROM blocks ORDER BY height')], list(range(12,21)))
+
+    def test_concurrent_writers_have_one_consistent_header(self):
+        windows = [self.crawler(A, start=10, end=10) for _ in range(2)]
+        windows[1]['blocks'][0]['hash'] = '0x' + 'a'*64
+        ready = Barrier(2)
+        def save(window):
+            ready.wait(timeout=5)
+            try:
+                self.store.record_scan(window)
+            except ValueError:
+                return False
+            return True
+        with ThreadPoolExecutor(max_workers=2) as workers:
+            self.assertEqual(sum(workers.map(save, windows)), 1)
+        scan, = self.store.scans()
+        with self.store.db() as db:
+            self.assertEqual(scan['blocks'][0]['hash'], db.execute('SELECT hash FROM blocks WHERE height=10').fetchone()[0])
+
+    def test_legacy_successor_header_and_migration(self):
+        path = Path(self.tmp.name)/'old.sqlite'
+        with sqlite3.connect(path) as connection:
+            connection.execute('CREATE TABLE blocks(height INTEGER PRIMARY KEY, hash TEXT NOT NULL)')
+        legacy = Store(path)
+        right = self.crawler(A, start=11, end=11)
+        block = right['blocks'][0]
+        with legacy.db() as db:
+            db.execute('INSERT INTO blocks(height,hash) VALUES(?,?)', (11, block['hash']))
+            db.execute('INSERT INTO scans(address,from_block,to_block,scan_time,record) VALUES(?,?,?,?,?)',
+                       (A, 11, 11, 'fixture', json.dumps({**right, 'dataset':'live', 'events':0})))
+        self.assertTrue(_checkpoint(legacy, A, 11, 11))
+        left = self.crawler(A, start=10, end=10)
+        legacy.record_scan(left)
+        self.assertEqual(legacy.status()['crawls'], 2)
+
+    def test_resume_requires_exact_persisted_event_witness(self):
+        window = self.crawler(A, start=10, end=10)
+        event = next(sample_events())
+        event.update(from_address=A, block_number=10, block_hash=window['blocks'][0]['hash'])
+        window['events'] = [event]
+        self.store.record_scan(window)
+        self.assertTrue(_checkpoint(self.store, A, 10, 10))
+        with self.store.db() as db:
+            db.execute("UPDATE events SET raw_amount='7' WHERE dataset='live' AND id=?", (event['id'],))
+        self.assertFalse(_checkpoint(self.store, A, 10, 10))
+        with self.store.db() as db:
+            db.execute("UPDATE events SET raw_amount=? WHERE dataset='live' AND id=?", (event['raw_amount'], event['id']))
+            db.execute('DELETE FROM scan_events WHERE event_id=?', (event['id'],))
+        self.assertFalse(_checkpoint(self.store, A, 10, 10))
+        self.assertIsNone(self.store.search_export(A)['event_witnesses'][event['id']])
+
     def test_cli_requires_operator_rpc(self):
         with patch.dict('os.environ',{'VISION_RPC_URL':''}), contextlib.redirect_stderr(io.StringIO()), self.assertRaises(SystemExit) as exc:
             main([A,'--start','10','--end','17'])

@@ -25,7 +25,11 @@ python3 backfill.py --help
 python3 backfill.py 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48 --start 21000000 --end 21000015 --window 8 --retries 1
 ```
 
-The CLI accepts up to 128 inclusive blocks per invocation, 1–8 blocks per window and at most two retries. Rerunning the same command resumes exact saved account/range windows after checking their block hashes against the local index; it never assumes another account or an overlapping scan covers the request. A matching checkpoint is local evidence, not independent provider corroboration. Each window is committed separately with block and parent hashes. A failure aborts that window; a finalized hash conflict does not overwrite the prior record. Repeated identical events are deduplicated. Requests, block ranges, response sizes, runtimes and persisted query result sizes are capped. A provider can omit an observation without exposing the omission; the data is not a full node or independently verified proof.
+The CLI accepts up to 128 inclusive blocks per invocation, 1–8 blocks per window and at most two retries. Rerunning the same command resumes an exact saved account/range window after checking its block headers, event count, and links to the stored live event rows. New scans also record a SHA-256 over those rows. A nonempty scan from an older database is read again once to establish that record. Empty windows can resume with zero linked events. A matching checkpoint is local evidence, not independent provider corroboration. Each window is committed in one SQLite write transaction. Its headers must agree with both adjacent stored windows wherever present, including when importing older blocks after newer ones. Older databases retain parent evidence in saved scan records. A missing parent for an existing successor requires re-observing that successor. Failed windows leave earlier evidence intact. Repeated identical events are deduplicated.
+
+A successful token transfer observation must match its receipt log by transaction, block, log index, emitting contract, topics and raw amount. Receipts from before Byzantium can contain a state root without a success status. A window that needs such a receipt is withheld because Vision cannot establish execution success from it.
+
+Each crawl attempt has a 60-second acceptance deadline, a request-count budget, and caps on blocks, events and response bytes. The transport checks remaining time between reads. If an operating-system DNS or socket call returns late, Vision discards the result before handing it to the index. Retries, backoff, SQLite lock waits and commit time are additional elapsed time. A provider can omit an observation without exposing the omission; the data is not a full node or independently verified proof.
 
 ## API
 
@@ -33,7 +37,7 @@ The CLI accepts up to 128 inclusive blocks per invocation, 1–8 blocks per wind
 | --- | --- | --- |
 | GET | `/api/status` | Version, row counts, demo address, RPC configured flag (not a connectivity check). |
 | GET | `/api/search?q=...` | Up to 100 events, matching labels, detected identifier, coverage and truncation flag. |
-| GET | `/api/search-export?q=...` | Bounded search evidence + exact supporting crawl windows and checksum. Address searches can also include the 50 latest windows, including empty ones. |
+| GET | `/api/search-export?q=...` | Bounded search evidence, supporting crawl windows and checksum. `event_witnesses` maps each exported live event ID to a local `scan_id` in `crawl_windows`. A null witness means that the index lacks a saved link. Address searches can also include the 50 latest windows, including empty ones. |
 | GET | `/api/scans` | Last 20 live crawl records. |
 | POST | `/api/crawl` | JSON `{"address":"0x…","blocks":2,"end":22500000}`; optional end. Returns window, observed event count, coverage and block hashes. |
 | GET | `/api/case` | Fixed, fictional input, computed outputs, review history and boundary. |

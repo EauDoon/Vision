@@ -28,7 +28,7 @@ class Fixture:
         if m=='eth_chainId': result=self.chain
         elif m=='eth_getBlockByNumber': result=self.block
         elif m=='eth_getLogs': result=self.logs
-        elif m=='eth_getTransactionReceipt': result=self.receipt
+        elif m=='eth_getTransactionReceipt': result={'logs':self.logs, **self.receipt}
         else: raise AssertionError(m)
         response={'jsonrpc':'2.0','id':p['id'],'result':copy.deepcopy(result)}
         if self.mutate: self.mutate(p,response)
@@ -57,6 +57,37 @@ class ChainTests(unittest.TestCase):
     def test_zero_token_transfer_retained(self):
         f=Fixture(); f.logs[0]['data']='0x'+'0'*64
         self.assertEqual(self.run_crawl(f)['events'][1]['raw_amount'],'0')
+    def test_filter_and_receipt_agree_on_exact_log(self):
+        f = Fixture()
+        f.receipt['logs'] = copy.deepcopy(f.logs)
+        f.receipt['logs'][0]['data'] = '0x' + format(7, '064x')
+        with self.assertRaisesRegex(ChainError, 'disagrees with transaction receipt'):
+            self.run_crawl(f)
+
+    def test_receipt_needs_an_entry_for_filtered_transfer(self):
+        f = Fixture()
+        f.receipt['logs'] = []
+        with self.assertRaisesRegex(ChainError, 'disagrees with transaction receipt'):
+            self.run_crawl(f)
+
+    def test_root_only_receipt_has_specific_coverage_error(self):
+        f = Fixture()
+        del f.receipt['status']
+        f.receipt['root'] = H
+        with self.assertRaisesRegex(ChainError, 'pre-Byzantium'):
+            self.run_crawl(f)
+
+    def test_final_response_must_arrive_within_budget(self):
+        f = Fixture()
+        clock = [0]
+        def advance_at_final_header(request, reply):
+            if request['method'] == 'eth_getBlockByNumber' and request['params'] == ['0xa', False]:
+                clock[0] = 61
+        f.mutate = advance_at_final_header
+        with patch('chain.time.monotonic', side_effect=lambda: clock[0]):
+            with self.assertRaisesRegex(ChainError, 'time budget'):
+                self.run_crawl(f)
+
     def test_wrong_chain(self):
         f=Fixture(); f.chain='0x89'
         with self.assertRaises(ChainError): self.run_crawl(f)
