@@ -1,5 +1,25 @@
 # Verification log
 
+## Vision v1.2.0 candidate · Balancer Vault
+
+**Fixture-backed reconciliation passed for these three blocks.** On 19 November 2026, the `verify` and `browser` jobs both checked out implementation commit `2b8fd7a8d09302b36299beb829902b2e49e3cb3a`. The input is the pinned archive’s receipt projection served as constructed JSON-RPC responses. [Candidate CI](https://github.com/EauDoon/Vision/actions/runs/44529661598) · [Checks on the current draft PR head](https://github.com/EauDoon/Vision/pull/5/checks)
+
+| Ethereum block | Archive receipts / logs examined | Expected / observed | Decision |
+| ---: | ---: | ---: | --- |
+| 22,431,084 | 95 / 233 | 2 / 2 | `matched` |
+| 17,034,870 | 184 / 510 | 2 / 2 | `matched` |
+| 17,034,869 | 93 / 208 | 0 / 0 | `verified_zero` |
+
+The four nonzero rows agreed on block hash, transaction hash, block-wide log index, contract, sender, recipient and raw amount. For the zero, the receipt projection covers all 208 log positions. Both Vault filters returned empty and the importer rechecked the block hash. The archive answer and all three compressed inputs were independently rebuilt and compared byte for byte. [Source pins, MIT notice and rebuild instructions](../fixtures/balancer-vault/README.md)
+
+**Reviewer packet SHA-256** `494a8f18c04b3f1ce533eeb00ad979b5d7ddb5036f8b4f6d976f12ef4929583c`
+
+The 93 offline Python tests, `python3 report.py --check`, `node --check static/app.js` and the loopback Chromium download passed locally and on candidate CI. The browser received the report once, blocked further requests to the report endpoint, and downloaded it. The response body, on-screen JSON and saved bytes matched. The displayed digest matched the packet, and the CLI verified it against the pinned evidence. Regression tests rejected edited amounts, coverage and witnesses even after recalculating the outer checksum.
+
+Two-provider live importer verification remains open. The separate public replay command was exercised with offline test doubles. [Operator command](OPERATIONS.md#optional-two-provider-check-for-the-vault)
+
+## Earlier releases
+
 The historical v1.0.0 results below apply to that release only. For v1.1.0 coverage and remaining gaps, see [the v1.1 release record](V1.1.md).
 
 ## Vision v1.0.0 release verification
