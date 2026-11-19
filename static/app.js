@@ -184,7 +184,7 @@ async function refreshStatus() {
   const status = await request('/api/status');
   state.status = status;
   $('version').textContent = 'VISION / ' + (status.version || 'V1.1');
-  $('connection').textContent = status.rpc_configured ? 'Local index · RPC configured' : 'Local index · RPC not configured';
+  $('connection').textContent = status.rpc_configured ? 'RPC configured' : 'RPC not configured';
   for (const key of ['events', 'labels', 'crawls']) {
     $('count-' + key).textContent = Number.isInteger(status.counts?.[key]) ? String(status.counts[key]) : 'Unknown';
   }

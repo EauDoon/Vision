@@ -144,7 +144,7 @@ footer { margin-top: 30px; padding: 20px 0; border-top: 1px solid var(--line); d
   .nav-item { min-height: 36px; padding: 7px; font-size: 13px; border-inline-start: 0; border-bottom: 2px solid transparent; }
   main { margin-left: 0; }
   .topbar { padding: 6px 16px; min-height: 40px; }
-  .note-prefix { display: none; }
+  .note-prefix, .note-link [aria-hidden] { display: none; }
   .topbar .pill { font-size: 10px; }
   .content { padding: 20px 16px 0; }
   .lede { font-size: 15px; }
