@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="224" viewBox="0 0 1000 224" role="img" aria-labelledby="title desc">
+<title id="title">Vision's two evidence paths</title><desc id="desc">Observed public transfers pass through the index into search and evidence. Separately, synthetic financial records pass through FIFO into review and evidence; no taxpayer attribution is performed.</desc>
+<rect width="1000" height="224" rx="18" fill="#12271f"/>
+<g font-family="system-ui, sans-serif"><text x="34" y="39" font-size="14" letter-spacing="3" font-weight="700" fill="#a8d5bc">VISION / SYSTEM MAP</text>
+<path d="M34 58H966M34 133H966" stroke="#3b5047"/>
+<g fill="#a4bdaf" font-size="12" font-weight="600" letter-spacing="1"><text x="34" y="83">01  PUBLIC CHAIN</text><text x="34" y="159">02  FICTIONAL CASE</text></g>
+<g fill="#eff6ee" font-size="21" font-weight="600"><text x="34" y="112">Finalized evidence</text><text x="365" y="112">Searchable transfers</text><text x="726" y="112">Indexed extract</text>
+<text x="34" y="188">Priced source records</text><text x="365" y="188">Deterministic FIFO</text><text x="726" y="188">Reviewed case</text></g>
+<g stroke="#98d7aa" stroke-width="2" fill="none"><path d="M290 104h45m-7-6 7 6-7 6M650 104h45m-7-6 7 6-7 6M290 180h45m-7-6 7 6-7 6M650 180h45m-7-6 7 6-7 6"/></g></g></svg>
