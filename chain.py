@@ -15,6 +15,7 @@ import socket
 import time
 from urllib.parse import urlsplit
 from urllib.request import Request, build_opener, HTTPRedirectHandler
+from typing import NamedTuple
 
 TRANSFER = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef'
 DEFAULT_HOSTS = frozenset({'ethereum-rpc.publicnode.com', 'ethereum.publicnode.com', 'eth.llamarpc.com', 'cloudflare-eth.com'})
@@ -62,7 +63,14 @@ class _NoRedirect(HTTPRedirectHandler):
         raise ChainError('RPC redirects are not permitted.')
 
 
-def _http_send(url, payload):
+def _remaining(deadline):
+    seconds = deadline - time.monotonic()
+    if seconds <= 0:
+        raise ChainError('Crawl time budget exhausted; use a smaller range.')
+    return seconds
+
+
+def _http_send(url, payload, deadline):
     host = _endpoint(url)
     try:
         addresses = socket.getaddrinfo(host, 443, type=socket.SOCK_STREAM)
@@ -71,15 +79,44 @@ def _http_send(url, payload):
         request = Request(url, json.dumps(payload).encode(), {'Content-Type': 'application/json', 'User-Agent': 'Vision/1.0'})
         # Do not inherit proxy credentials or allow redirect-based endpoint changes.
         from urllib.request import ProxyHandler
-        with build_opener(ProxyHandler({}), _NoRedirect()).open(request, timeout=15) as response:
-            body = response.read(MAX_RESPONSE + 1)
-        if len(body) > MAX_RESPONSE:
-            raise ChainError('RPC response exceeded the size limit; use a smaller range.')
+        timeout = min(15, _remaining(deadline))
+        with build_opener(ProxyHandler({}), _NoRedirect()).open(request, timeout=timeout) as response:
+            body = bytearray()
+            while True:
+                _remaining(deadline)
+                chunk = response.read1(min(65536, MAX_RESPONSE + 1 - len(body)))
+                if not chunk:
+                    break
+                body.extend(chunk)
+                if len(body) > MAX_RESPONSE:
+                    raise ChainError('RPC response exceeded the size limit; use a smaller range.')
         return json.loads(body)
     except ChainError:
         raise
     except Exception:
         raise ChainError('RPC provider unavailable or returned unreadable data.') from None
+
+
+class LogEvidence(NamedTuple):
+    tx_hash: str
+    block_number: int
+    block_hash: str
+    index: int
+    contract: str
+    topics: tuple
+    data: str
+
+
+def _log_evidence(log):
+    """Comparable receipt and filter-log fields for an ERC-20-shaped observation."""
+    if log.get('removed', False) is not False:
+        raise ChainError('Receipt contains a removed transfer.')
+    return LogEvidence(
+        tx_hash=_hash(log.get('transactionHash')), block_number=_quantity(log.get('blockNumber')),
+        block_hash=_hash(log.get('blockHash')), index=_quantity(log.get('logIndex')),
+        contract=normalize_address(log.get('address')), topics=tuple(_hash(t) for t in log['topics']),
+        data=_hash(log.get('data')),
+    )
 
 
 def crawl(address, *, rpc_url, start=None, end=None, max_blocks=8, http_send=None):
@@ -100,17 +137,20 @@ def crawl(address, *, rpc_url, start=None, end=None, max_blocks=8, http_send=Non
     for value in (start, end):
         if value is not None and (type(value) is not int or value < 0):
             raise ChainError('Block bounds must be non-negative integers.')
-    sender = http_send or _http_send
+    padded = '0x' + address[2:].rjust(64, '0')
     sequence = 0
     deadline = time.monotonic() + 60
 
     def rpc(method, params):
         nonlocal sequence
         sequence += 1
-        if sequence > 256 or time.monotonic() > deadline:
+        _remaining(deadline)
+        if sequence > 256:
             raise ChainError('Crawl request budget exhausted; use a smaller range.')
         try:
-            reply = sender(rpc_url, {'jsonrpc': '2.0', 'id': sequence, 'method': method, 'params': params})
+            payload = {'jsonrpc': '2.0', 'id': sequence, 'method': method, 'params': params}
+            reply = http_send(rpc_url, payload) if http_send else _http_send(rpc_url, payload, deadline)
+            _remaining(deadline)
         except ChainError:
             raise
         except Exception:
@@ -133,20 +173,45 @@ def crawl(address, *, rpc_url, start=None, end=None, max_blocks=8, http_send=Non
     blocks = {}
     events = {}
     receipts = {}
+    receipt_log_count = 0
 
     def receipt(tx_hash, number, block_hash):
+        nonlocal receipt_log_count
         if tx_hash not in receipts:
             r = rpc('eth_getTransactionReceipt', [tx_hash])
             if not isinstance(r, dict) or _hash(r.get('transactionHash')) != tx_hash or _quantity(r.get('blockNumber')) != number or _hash(r.get('blockHash')) != block_hash:
                 raise ChainError('Receipt disagrees with block evidence; retry the crawl.')
+            if 'status' not in r and 'root' in r:
+                raise ChainError('Historical receipt has no success status (pre-Byzantium); window withheld.')
             status = _quantity(r.get('status'))
             if status not in (0, 1):
                 raise ChainError('Provider returned an invalid receipt status.')
-            receipts[tx_hash] = (status, number, block_hash)
-        status, receipt_number, receipt_hash = receipts[tx_hash]
+            witnesses = {}
+            logs = r.get('logs', [])
+            if not isinstance(logs, list) or len(logs) > MAX_EVENTS:
+                raise ChainError('Invalid or oversized receipt log list.')
+            for entry in (logs if status else ()):
+                topics = entry.get('topics') if isinstance(entry, dict) else None
+                if not isinstance(topics, list) or len(topics) != 3:
+                    continue
+                if not all(isinstance(t, str) for t in topics):
+                    continue
+                if topics[0].lower() != TRANSFER or padded not in (topics[1].lower(), topics[2].lower()):
+                    continue
+                evidence = _log_evidence(entry)
+                index = evidence.index
+                inclusion = (evidence.tx_hash, evidence.block_number, evidence.block_hash)
+                if inclusion != (tx_hash, number, block_hash) or index in witnesses:
+                    raise ChainError('Conflicting receipt log inclusion evidence.')
+                witnesses[index] = evidence
+                receipt_log_count += 1
+                if receipt_log_count > MAX_EVENTS:
+                    raise ChainError('Receipt log limit exceeded; use a smaller range.')
+            receipts[tx_hash] = (status, number, block_hash, witnesses)
+        status, receipt_number, receipt_hash, witnesses = receipts[tx_hash]
         if (receipt_number, receipt_hash) != (number, block_hash):
             raise ChainError('Conflicting transaction inclusion evidence.')
-        return status
+        return status, witnesses
 
     def add_event(tx_hash, block, kind, sender_address, recipient, amount, contract=None, index=None):
         identifier = f'eip155:1:{tx_hash}:{"native" if index is None else index}'
@@ -180,10 +245,10 @@ def crawl(address, *, rpc_url, start=None, end=None, max_blocks=8, http_send=Non
             if not amount or target is None:  # Creation value needs receipt contract attribution, not assumed here.
                 continue
             tx_hash = _hash(tx.get('hash'))
-            if receipt(tx_hash, number, block['hash']):
+            status, _ = receipt(tx_hash, number, block['hash'])
+            if status:
                 add_event(tx_hash, block, 'native_transfer', source, target, amount)
 
-    padded = '0x' + address[2:].rjust(64, '0')
     for topics in ([TRANSFER, padded], [TRANSFER, None, padded]):
         logs = rpc('eth_getLogs', [{'fromBlock': hex(start), 'toBlock': hex(end), 'topics': topics}])
         if not isinstance(logs, list) or len(logs) > MAX_EVENTS:
@@ -213,9 +278,16 @@ def crawl(address, *, rpc_url, start=None, end=None, max_blocks=8, http_send=Non
             if not isinstance(log.get('data'), str) or not HASH.fullmatch(log['data']):
                 raise ChainError('Malformed ERC-20 transfer amount.')
             tx_hash = _hash(log.get('transactionHash'))
-            if receipt(tx_hash, number, blocks[number]['hash']):
-                add_event(tx_hash, blocks[number], 'erc20_transfer', *decoded, int(log['data'], 16), normalize_address(log.get('address')), _quantity(log.get('logIndex')))
+            status, witnesses = receipt(tx_hash, number, blocks[number]['hash'])
+            if status:
+                evidence = _log_evidence(log)
+                index = evidence.index
+                if witnesses.get(index) != evidence:
+                    raise ChainError('Filter log disagrees with transaction receipt; window withheld.')
+                add_event(tx_hash, blocks[number], 'erc20_transfer', *decoded, int(log['data'], 16), evidence.contract, index)
     check = rpc('eth_getBlockByNumber', [hex(end), False])
     if not isinstance(check, dict) or _hash(check.get('hash')) != blocks[end]['hash']:
         raise ChainError('Canonical block changed during crawl; nothing was committed.')
-    return dict(provider=provider_host if provider_host in DEFAULT_HOSTS else 'operator-approved RPC', chain_id=chain_id, address=address, account_id=f'eip155:1:{address}', from_block=start, to_block=end, events=sorted(events.values(), key=lambda x: (x['block_number'], x['tx_hash'], -1 if x['log_index'] is None else x['log_index'])), blocks=list(blocks.values()), coverage='Bounded finalized blocks only. Native top-level transfers and ERC-20-shaped Transfer logs; excludes internal transfers, fees, contract-creation value, NFTs, swaps classification, prices, historical cost basis and off-chain activity. Empty results do not mean no wallet activity.', provider_finalized_block=finalized)
+    result = dict(provider=provider_host if provider_host in DEFAULT_HOSTS else 'operator-approved RPC', chain_id=chain_id, address=address, account_id=f'eip155:1:{address}', from_block=start, to_block=end, events=sorted(events.values(), key=lambda x: (x['block_number'], x['tx_hash'], -1 if x['log_index'] is None else x['log_index'])), blocks=list(blocks.values()), coverage='Bounded finalized blocks only. Native top-level transfers and ERC-20-shaped Transfer logs; excludes internal transfers, fees, contract-creation value, NFTs, swaps classification, prices, historical cost basis and off-chain activity. Empty results do not mean no wallet activity.', provider_finalized_block=finalized)
+    _remaining(deadline)
+    return result
