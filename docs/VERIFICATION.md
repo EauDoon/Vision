@@ -1,4 +1,8 @@
-# Vision v1.0.0 release verification
+# Verification log
+
+The historical v1.0.0 results below apply to that release only. For v1.1.0 coverage and remaining gaps, see [the v1.1 release record](V1.1.md).
+
+## Vision v1.0.0 release verification
 
 Verified on 18 November 2026 against Python 3.12 in a clean temporary SQLite database. Use the commands in the main README to reproduce the offline checks. No private taxpayer data or credentials are included.
 

@@ -60,6 +60,15 @@ def main():
                         out = Path(os.environ["VISION_UI_SCREENSHOTS"])
                         out.mkdir(parents=True, exist_ok=True)
                         page.screenshot(path=str(out / "desktop.png"), full_page=True)
+                    page.get_by_role("link",name="Read the fictional case").click()
+                    expect(page.get_by_role("heading",level=1)).to_contain_text("actually a gain")
+                    page.get_by_text("Inspect the four fixture records and their price sources").click()
+                    expect(page.locator(".sources")).to_contain_text("synthetic://ledger/opening-1")
+                    for width in (1440, 768, 390):
+                        page.set_viewport_size({"width":width,"height":900})
+                        assert page.evaluate("document.documentElement.scrollWidth <= innerWidth"), f"Report overflow: {width}px"
+                    page.set_viewport_size({"width":1440,"height":1050})
+                    page.go_back()
                     page.locator("#load-demo").click()
                     expect(page.locator("#query")).to_have_value(re.compile(r"^0x[0-9a-f]{40}$"))
                     page.locator(".record-button").first.click()

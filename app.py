@@ -1,4 +1,4 @@
-"""Vision 1.0.0 | local-only read-only chain exploration and fictional case review."""
+"""Vision 1.1.0 | local-only read-only chain exploration and fictional case review."""
 import argparse
 import json
 import os
@@ -11,10 +11,12 @@ from chain import ChainError, crawl, normalize_address
 from reconcile import demo_case, reconcile
 from store import DEMO_ADDRESS, Store, digest, encode
 
-VERSION = "1.0.0"
+VERSION = "1.1.0"
 STATIC = Path(__file__).resolve().parent / "static"
 FILES = {"/":("index.html","text/html; charset=utf-8"),"/index.html":("index.html","text/html; charset=utf-8"),
          "/static/app.js":("app.js","text/javascript; charset=utf-8"),"/static/style.css":("style.css","text/css; charset=utf-8")}
+for asset, mime in (("report.html", "text/html; charset=utf-8"), ("report.css", "text/css; charset=utf-8"), ("report-figure.svg", "image/svg+xml")):
+    FILES["/static/" + asset] = (asset, mime)
 BOUNDARY = "Local research workbench. Public-chain observations and simulated case evidence are separate."
 
 
