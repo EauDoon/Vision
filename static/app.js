@@ -179,11 +179,101 @@ async function labels(query = '') {
 }
 
 function metric(label,value,note){const el=document.createElement('div');el.append(text('span',label),text('strong',value),text('small',note));return el;}
+const reviewTokens = {
+  '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2': 'WETH',
+  '0xae78736cd615f374d3085123a210448e74fc6393': 'rETH'
+};
+
+function reviewEvidence(label, side, vault) {
+  const column = document.createElement('section');
+  column.append(text('h3', label), text('p', 'Block hash'), text('code', side.block_hash ?? 'Unavailable'));
+  if (!side.rows?.length) {
+    column.append(text('p', side.count === 0 ? 'No matching rows.' : 'Row evidence unavailable.'));
+    return column;
+  }
+  for (const row of side.rows) {
+    const incoming = row.to_address === vault;
+    const outgoing = row.from_address === vault;
+    const direction = incoming && outgoing ? 'self-transfer' : incoming ? 'in' : outgoing ? 'out' : '';
+    const token = reviewTokens[row.contract] ?? 'Token';
+    const facts = document.createElement('dl');
+    for (const [key, value] of [
+      ['Raw amount', row.raw_amount], ['Transaction', row.tx_hash], ['Contract', row.contract],
+      ['Sender', row.from_address], ['Recipient', row.to_address]
+    ]) {
+      facts.append(text('dt', key), text('dd', value));
+    }
+    column.append(text('h4', 'Log ' + row.log_index + ' · ' + token + ' ' + direction), facts);
+  }
+  return column;
+}
+
+function reviewBlock(block, packet) {
+  const card = document.createElement('article');
+  card.className = 'panel review-block';
+  const heading = document.createElement('div');
+  heading.className = 'panel-title';
+  const decision = {matched: 'Matched', verified_zero: 'Verified zero', mismatch: 'Mismatch', unavailable: 'Unavailable'};
+  const problem = block.status === 'mismatch' || block.status === 'unavailable';
+  heading.append(text('h2', 'Block ' + block.block_number.toLocaleString('en-US')),
+    text('span', decision[block.status], problem ? 'pill amber' : 'pill'));
+  const count = value => value === null ? 'unavailable' : value;
+  card.append(heading, text('p', 'Archive expected ' + count(block.expected.count) +
+    ' · Importer observed ' + count(block.observed.count), 'review-counts'));
+  const coverage = block.coverage;
+  if (block.status !== 'verified_zero') {
+    card.append(text('p', 'Coverage checked ' + count(coverage.receipts_examined) + ' of ' +
+      count(coverage.receipts) + ' archived receipts and ' + count(coverage.logs_examined) + ' of ' +
+      count(coverage.logs) + ' logs.'));
+  }
+  card.append(text('p', block.reason));
+
+  const details = document.createElement('details');
+  details.append(text('summary', 'Inspect source rows and block hashes'));
+  const rows = document.createElement('div');
+  rows.className = 'review-sides';
+  rows.append(reviewEvidence('Archive expectation', block.expected, packet.scope.address),
+    reviewEvidence('Importer observation', block.observed, packet.scope.address));
+  const archive = text('a', 'Open pinned archive for block ' + block.block_number.toLocaleString('en-US'));
+  archive.href = packet.archive.repository + '/blob/' + packet.archive.revision + '/' + block.archive.path;
+  const filters = block.witness.filter_counts;
+  const witness = text('p', 'Sender filter: ' + count(filters.sender) + ' · Recipient filter: ' +
+    count(filters.recipient) + ' · Final block header: ' + (block.witness.end_header_checked ? 'checked' : 'unavailable'));
+  details.append(witness, rows, archive, text('p', 'Archive file SHA-256'), text('code', block.archive.sha256));
+  card.append(details);
+  return card;
+}
+
+async function loadTransferReview() {
+  const report = $('transfer-review-report');
+  const status = $('transfer-review-status');
+  if (!report.hidden || status.hasAttribute('aria-busy')) return;
+  $('retry-transfer-review').hidden = true;
+  status.setAttribute('aria-busy', 'true');
+  status.textContent = 'Comparing the three block fixtures…';
+  try {
+    const response = await downloadResponse('/api/transfer-review');
+    const body = await response.text();
+    const packet = JSON.parse(body);
+    $('transfer-review-blocks').replaceChildren(...packet.blocks.map(block => reviewBlock(block, packet)));
+    $('transfer-review-address').textContent = packet.scope.address;
+    $('transfer-review-digest').textContent = packet.sha256;
+    $('transfer-review-json').textContent = body;
+    report.hidden = false;
+    status.textContent = '';
+  } catch (error) {
+    status.textContent = 'Transfer review unavailable. ' + error.message;
+    $('retry-transfer-review').hidden = false;
+  } finally {
+    status.removeAttribute('aria-busy');
+  }
+}
+
 async function loadCase(){const serial=++state.caseSerial;const data=await request('/api/case');if(serial!==state.caseSerial)return;const r=data.result||{};const currency=r.currency||'illustrative units';$('case-state').textContent=r.status||'Unresolved';$('case-summary').replaceChildren(metric('Reconstructed gains',r.totals?.realized_gains??'Blocked',currency+' · fictional FIFO example'),metric('Reconstructed income',r.totals?.income??'Blocked',currency+' · separate category'),metric('Gains difference',r.differences?.realized_gains??'Blocked','Reconstructed minus declared · not tax due'));$('case-facts').replaceChildren();const facts={'Case':r.case_id,'Rule pack':r.pack?`${r.pack.id} / ${r.pack.version}`:'—','Period':r.period?`${r.period.start} to ${r.period.end}`:'—','Income difference':r.differences?.income,'Evidence hash':r.evidence_hash};for(const [key,value]of Object.entries(facts))$('case-facts').append(text('dt',key),text('dd',display(value)));$('case-issues').replaceChildren();for(const issue of [...(Array.isArray(r.issues)?r.issues:[]),...(Array.isArray(r.limitations)?r.limitations:[])])$('case-issues').append(text('p',display(issue),'fine'));$('case-json').textContent=JSON.stringify(data,null,2);if(data.review){$('review-result').textContent=`Last review: ${data.review.decision} · ${data.review.at}\n${data.review.note}`;}else{$('review-result').textContent='No research review recorded yet.';}}
 async function refreshStatus() {
   const status = await request('/api/status');
   state.status = status;
-  $('version').textContent = 'VISION / ' + (status.version || 'V1.1');
+  $('version').textContent = 'VISION / ' + (status.version || 'V1.2');
   $('connection').textContent = status.rpc_configured ? 'RPC configured' : 'RPC not configured';
   for (const key of ['events', 'labels', 'crawls']) {
     $('count-' + key).textContent = Number.isInteger(status.counts?.[key]) ? String(status.counts[key]) : 'Unknown';
@@ -196,7 +286,7 @@ async function refreshStatus() {
 
 function changeView(event) {
   const wanted = location.hash.slice(1);
-  const view = ['explore', 'labels', 'case', 'scope'].includes(wanted) ? wanted : 'explore';
+  const view = ['explore', 'transfer-review', 'labels', 'case', 'scope'].includes(wanted) ? wanted : 'explore';
   const section = $('view-' + view);
   document.querySelectorAll('.view').forEach(el => { el.hidden = el !== section; });
   document.querySelectorAll('[data-view]').forEach(el => {
@@ -212,6 +302,7 @@ function changeView(event) {
     title.focus();
   }
   if (view === 'labels') labels($('label-query').value.trim());
+  if (view === 'transfer-review') loadTransferReview();
   if (view === 'case') loadCase().catch(error => {
     $('case-state').textContent = 'Unavailable';
     notice('Could not load the fictional case. ' + error.message, true);
@@ -227,6 +318,11 @@ $('return-record').addEventListener('click', () => {
   state.sourceButton?.focus();
 });
 $('jump-import').addEventListener('click', () => $('crawl-address').focus());
+$('retry-transfer-review').addEventListener('click', loadTransferReview);
+$('download-transfer-review').addEventListener('click', () => {
+  const displayed = $('transfer-review-json').textContent;
+  saveBlob(new Blob([displayed], {type: 'application/json'}), 'vision-balancer-vault-review.json');
+});
 $('search-form').addEventListener('submit', event => {
   event.preventDefault();
   busy(event.currentTarget.querySelector('button'), () => search($('query').value.trim()));

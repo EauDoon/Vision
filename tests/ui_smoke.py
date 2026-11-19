@@ -94,13 +94,56 @@ def exercise_index_states(page, expect, base):
     page.reload()
 
 
-def capture_screens(page, out):
+def exercise_transfer_review(page, expect, app_root, screenshot_dir):
+    url = "**/api/transfer-review"
+    page.route(url, lambda route: route.fulfill(status=503, json={"error": "Fixture paused."}))
+    page.get_by_role("link", name="Vault transfer review").click()
+    expect(page.locator("#transfer-review-title")).to_be_focused()
+    expect(page.locator("#transfer-review-status")).to_contain_text("Fixture paused")
+    expect(page.locator("#download-transfer-review")).to_be_hidden()
+    page.unroute(url)
+    with page.expect_response(url) as loaded:
+        page.get_by_role("button", name="Retry review").click()
+    blocks = page.locator(".review-block")
+    expect(blocks).to_have_count(3)
+    expect(blocks.locator(".pill")).to_have_text(["Matched", "Matched", "Verified zero"])
+    expect(blocks.last).to_contain_text("93 archived receipts and 208 logs")
+    expect(blocks.last).to_contain_text("Archive expected 0 · Importer observed 0")
+    if screenshot_dir:
+        capture_screens(page, Path(screenshot_dir), prefix="vault-")
+    blocks.last.locator("summary").click()
+    expect(blocks.last).to_contain_text("Sender filter: 0 · Recipient filter: 0 · Final block header: checked")
+    blocks.first.locator("summary").focus()
+    page.keyboard.press("Enter")
+    columns = blocks.first.locator(".review-sides section")
+    expect(columns).to_have_count(2)
+    for column in columns.all():
+        expect(column).to_contain_text("Log 138 · WETH in")
+        expect(column).to_contain_text("433410975363818")
+        expect(column).to_contain_text("Log 139 · rETH out")
+        expect(column).to_contain_text("381986670507558")
+
+    # The handoff must work from the displayed snapshot even once the API goes offline.
+    page.route(url, lambda route: route.abort())
+    page.get_by_text("View the exact JSON", exact=True).click()
+    with page.expect_download() as event:
+        page.get_by_role("button", name="Download JSON").click()
+    assert event.value.suggested_filename == "vision-balancer-vault-review.json"
+    path = Path(event.value.path())
+    data = path.read_bytes()
+    assert data == loaded.value.body() == page.locator("#transfer-review-json").text_content().encode()
+    assert json.loads(data)["sha256"] == page.locator("#transfer-review-digest").inner_text()
+    subprocess.run([sys.executable, str(app_root / "transfer_review.py"), "--verify", str(path)], check=True)
+    page.unroute(url)
+
+
+def capture_screens(page, out, prefix=""):
     out.mkdir(parents=True, exist_ok=True)
     for name, width, height in (("desktop", 1440, 900), ("mobile", 390, 844)):
         page.set_viewport_size({"width": width, "height": height})
         page.evaluate("window.scrollTo(0, 0)")
-        page.screenshot(path=str(out / (name + "-viewport.png")))
-        page.screenshot(path=str(out / (name + ".png")), full_page=True)
+        page.screenshot(path=str(out / (prefix + name + "-viewport.png")))
+        page.screenshot(path=str(out / (prefix + name + ".png")), full_page=True)
     page.set_viewport_size({"width": 1440, "height": 1050})
 
 
@@ -208,6 +251,7 @@ def main():
                     expect(page.locator(".label-card")).to_have_count(1)
                     page.go_forward()
                     expect(page.locator("#view-explore")).to_be_visible()
+                    exercise_transfer_review(page, expect, args.app_root, destination)
                     page.locator('[data-view="case"]').click()
                     expect(page.locator("#case-state")).to_have_text("illustrative")
                     original = page.request.get(base + "/api/case").json()
@@ -235,7 +279,7 @@ def main():
                     expect(page.locator("#view-case")).to_be_visible()
                     for width in (1440, 768, 390, 320):
                         page.set_viewport_size({"width": width, "height": 900})
-                        for view in ("explore", "labels", "case", "scope"):
+                        for view in ("explore", "transfer-review", "labels", "case", "scope"):
                             page.locator('[data-view="' + view + '"]').click()
                             expect(page.locator("#view-" + view)).to_be_visible()
                             assert page.evaluate("document.documentElement.scrollWidth <= innerWidth"), f"Overflow: {view}, {width}px"
@@ -248,7 +292,7 @@ def main():
                     index = json.loads(Path(event.value.path()).read_text())
                     assert index, "Empty indexed-evidence export"
                     assert not js_errors, js_errors
-                    print("PASS: real local API/browser integration, search, labels, error state, preview isolation, review, exports, history, and desktop/mobile overflow.")
+                    print("PASS: loopback workbench, Vault packet download and offline verification, search, labels, errors, fictional review, exports, history, and responsive layouts.")
                 finally:
                     browser.close()
         finally:

@@ -54,7 +54,7 @@ class Workbench(unittest.TestCase):
 
     def test_02_search_types_and_dataset_labels(self):
         status=self.req('/api/status')[1]
-        self.assertEqual(status['version'],'1.1.0')
+        self.assertEqual(status['version'],'1.2.0')
         self.assertEqual(status['demo_address'],DEMO_ADDRESS)
         for q in ('Atlas',DEMO_ADDRESS,'eip155:1:'+DEMO_ADDRESS):
             data=self.req('/api/search?q='+quote(q))[1]
@@ -140,3 +140,18 @@ class Workbench(unittest.TestCase):
         again=Store(self.store.path)
         self.assertEqual(again.status(),self.store.status())
         self.assertEqual(again.search('Atlas')['events'],self.store.search('Atlas')['events'])
+
+    def test_08_fixed_transfer_review_is_read_only(self):
+        before = self.store.status(), self.store.scans()
+        code, packet = self.req('/api/transfer-review')
+        self.assertEqual(code, 200, packet)
+        self.assertEqual(packet['source_mode'], 'constructed_rpc_fixture')
+        self.assertEqual([(block['block_number'], block['status'], block['expected']['count'],
+                           block['observed']['count']) for block in packet['blocks']], [
+            (22431084, 'matched', 2, 2), (17034870, 'matched', 2, 2),
+            (17034869, 'verified_zero', 0, 0)])
+        claimed = packet.pop('sha256')
+        self.assertEqual(claimed, digest(packet))
+        self.assertEqual(self.req('/api/transfer-review', {})[0], 404)
+        self.assertEqual(self.req('/api/transfer-review?end=1')[0], 400)
+        self.assertEqual((self.store.status(), self.store.scans()), before)

@@ -2,7 +2,25 @@
 
 **An evidence-first workbench for Ethereum.** Search an address or transaction, inspect the transfers behind a label, and export exactly what the local index saw. A separate fictional case shows how verified economic records can be reconciled without guessing who owns a wallet or how much tax they owe.
 
-**v1.1.0 · Python ≥3.10 · SQLite · No runtime packages, wallet connection, or paid API required to explore the demo.** This is a single-user research release, not an enforcement system.
+**v1.2.0 · Python ≥3.10 · SQLite · Single-user research workbench.** The bundled reports run offline with the Python standard library.
+
+## Balancer Vault transfer review
+
+Does Vision recover the same ERC-20-shaped transfers as the archived receipts? Run `python3 app.py` and open the [local transfer review](http://127.0.0.1:8765/#transfer-review). Expand a block to inspect its archive evidence and importer rows. The scope is the Balancer Vault on Ethereum mainnet, with one finalized block per comparison. Amounts are raw integers.
+
+| Block | Archive matches | Receipt evidence |
+| --- | ---: | --- |
+| 22,431,084 | 2 | Logs 138 and 139, WETH in and rETH out |
+| 17,034,870 | 2 | Logs 405 and 406, WETH in and rETH out |
+| 17,034,869 | 0 | All 93 archived receipts and 208 logs examined |
+
+The report compares archived facts with Vision’s importer running on constructed JSON-RPC inputs. Download its JSON and check the displayed SHA-256 against the pinned evidence offline.
+
+```sh
+python3 transfer_review.py --verify vision-balancer-vault-review.json
+```
+
+For a fresh copy from the command line, run `python3 transfer_review.py > vision-balancer-vault-review.json`. The fixture provenance and release checks are documented in the [archive notes](fixtures/balancer-vault/README.md) and [verification record](docs/VERIFICATION.md).
 
 ## The illustrated report: one sale, two cost lots
 
@@ -63,7 +81,7 @@ The paths deliberately **do not join**. A transfer is not automatically a sale, 
 ```bash
 python3 -m unittest discover -s tests -v
 python3 report.py --check     # refuses stale or incomplete generated report assets
-node --check static/app.js   # optional JS syntax check
+node --check static/app.js
 ```
 
 The core tests run without internet: they cover RPC fixtures including reverts and self-transfers, deduplication, decimal precision, blocked calculations when inputs are missing, HTTP validation, database persistence and export integrity. A provider-backed end-to-end run is a **separate** check. See [verification notes](docs/VERIFICATION.md) for the exact release evidence and limitations.

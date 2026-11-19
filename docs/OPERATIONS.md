@@ -31,6 +31,18 @@ A successful token transfer observation must match its receipt log by transactio
 
 Each crawl attempt has a 60-second acceptance deadline, a request-count budget, and caps on blocks, events and response bytes. The transport checks remaining time between reads. If an operating-system DNS or socket call returns late, Vision discards the result before handing it to the index. Retries, backoff, SQLite lock waits and commit time are additional elapsed time. A provider can omit an observation without exposing the omission; the data is not a full node or independently verified proof.
 
+## Optional two-provider check for the Vault
+
+Two-provider live importer verification remains open. To collect a separate public observation, run this from the repository root. The command contacts both public Ethereum endpoints and writes its results to the named local file.
+
+```bash
+VISION_RPC_ALLOWED_HOSTS=eth.drpc.org python3 provider_review.py --public > vault-providers.json
+```
+
+PublicNode and dRPC publish keyless HTTPS endpoints. The command grants the importer access to dRPC for this process. PublicNode is already on its allowlist. Each provider receives the Vault address in two log filters per block. Historical data access and quotas depend on the provider. [PublicNode Ethereum endpoint](https://ethereum.publicnode.com/) · [dRPC Ethereum API](https://drpc.org/docs/ethereum-api)
+
+The command starts a fresh importer run for each provider and each of blocks 22,431,084, 17,034,870 and 17,034,869. It checks the provider’s finalized height, bypasses the SQLite index and checkpoints, then compares the block hash and full transfer rows with the pinned archive observations. The JSON keeps each provider’s decisions, expected rows and observed rows. A provider failure has a null observed count and an error. Incomplete archive coverage yields a null expected count while retaining the provider observation. Exit status 0 requires agreement for all six provider/block comparisons. A mismatch or unavailable result gives exit status 1 and preserves the other comparisons.
+
 ## API
 
 | Method | Resource | Result |
@@ -39,6 +51,7 @@ Each crawl attempt has a 60-second acceptance deadline, a request-count budget, 
 | GET | `/api/search?q=...` | Up to 100 events, matching labels, detected identifier, coverage and truncation flag. |
 | GET | `/api/search-export?q=...` | Bounded search evidence, supporting crawl windows and checksum. `event_witnesses` maps each exported live event ID to a local `scan_id` in `crawl_windows`. A null witness means that the index lacks a saved link. Address searches can also include the 50 latest windows, including empty ones. |
 | GET | `/api/scans` | Last 20 live crawl records. |
+| GET | `/api/transfer-review` | Offline Balancer Vault review for the three fixed Ethereum blocks. Returns the versioned packet used by the dashboard download. |
 | POST | `/api/crawl` | JSON `{"address":"0x…","blocks":2,"end":22500000}`; optional end. Returns window, observed event count, coverage and block hashes. |
 | GET | `/api/case` | Fixed, fictional input, computed outputs, review history and boundary. |
 | POST | `/api/simulate` | JSON `{"realized_gains":"3000","income":"180"}`. Recompute the demo with alternate declarations; never saves a case or review. |
@@ -48,6 +61,19 @@ Each crawl attempt has a 60-second acceptance deadline, a request-count budget, 
 Valid money fields are **decimal strings**, not floating-point JSON numbers. `raw_amount` is an integer string; look at `decimals` before display or comparison. A 64-hex query might be a block or transaction hash, not proof that a matching transaction exists.
 
 In an export, recompute the outer `sha256` by removing that field and hashing UTF-8 JSON using lexicographic keys, compact separators and unescaped Unicode (see `store.encode`). The nested calculation hash has its own defined payload in `reconcile.py`. Hashes are integrity checks, not independent authentication or tamper-proof audit custody. No export signs or transmits a transaction.
+
+### Reviewing a transfer packet offline
+
+Start Vision, open the transfer review and expand a block. Each decision compares the block hash and every transfer’s transaction hash, block-wide log index, emitting contract, indexed sender, indexed recipient and raw integer amount. Native ETH and internal movements fall outside the predicate. The report reads its evidence from the bundled fixtures and leaves the index and scan history untouched.
+
+| Decision | Interpretation |
+| --- | --- |
+| `matched` | Both observations completed and their block hash and transfer rows agree. |
+| `verified_zero` | The archive covers every receipt and log in the block. Both directional filter reads completed and the importer also returned zero matching transfers at the same hash. |
+| `mismatch` | Both observations completed, with different block hashes or transfer rows. Inspect the two sides even when the counts agree. |
+| `unavailable` | Evidence or replay coverage is incomplete. The missing observation has a JSON null count. |
+
+To check a downloaded packet, run `python3 transfer_review.py --verify vision-balancer-vault-review.json` from a trusted checkout. The verifier checks the outer digest and rebuilds the packet against the pinned evidence, including coverage and witnesses. A successful exit validates the supplied packet for this fixture version. Two-provider live importer verification remains open.
 
 ## Troubleshooting
 
