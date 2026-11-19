@@ -2,7 +2,17 @@
 
 **An evidence-first workbench for Ethereum.** Search an address or transaction, inspect the transfers behind a label, and export exactly what the local index saw. A separate fictional case shows how verified economic records can be reconciled without guessing who owns a wallet or how much tax they owe.
 
-**v1.0.0 · Python ≥3.10 · SQLite · No runtime packages, wallet connection, or paid API required to explore the demo.** This is a single-user research release, not an enforcement system.
+**v1.1.0 · Python ≥3.10 · SQLite · No runtime packages, wallet connection, or paid API required to explore the demo.** This is a single-user research release, not an enforcement system.
+
+## The illustrated report: one sale, two cost lots
+
+![Fictional $5,000 sale: $2,000 opening-lot cost, $750 from the next lot, and $2,250 realized gain.](static/report-figure.svg)
+
+A fictional sale brings in **$5,000**, but only **$2,250 is gain**: the oldest units sold cost $2,000, and the next half unit cost $750. Compare gain against its own declaration and income against its own; neither difference is a tax bill.
+
+**Fastest:** [download the single-file illustrated report](https://github.com/EauDoon/Vision/raw/refs/heads/main/static/vision-field-note.html) and open it in a browser. The chart and styles are embedded.
+
+**With the workbench:** download the [source ZIP](https://github.com/EauDoon/Vision/archive/refs/heads/main.zip), extract it, and open `static/report.html` in a browser, keeping its sibling CSS and SVG files alongside it. No install, server or network is needed. From the running app, choose **Read the fictional case**. Use your browser’s Print / Save as PDF to keep a copy. [Read the worked example and reproduction steps on GitHub](docs/FIELD-NOTE.md).
 
 ## Try it in two minutes
 
@@ -52,6 +62,7 @@ The paths deliberately **do not join**. A transfer is not automatically a sale, 
 
 ```bash
 python3 -m unittest discover -s tests -v
+python3 report.py --check     # refuses stale or incomplete generated report assets
 node --check static/app.js   # optional JS syntax check
 ```
 
