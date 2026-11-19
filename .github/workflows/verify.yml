@@ -58,18 +58,33 @@ jobs:
       - name: Prepare the synthetic screenshots for this design review
         if: ${{ !cancelled() }}
         run: |
-          python3 - <<'PY'
+          "$RUNNER_TEMP/vision-browser/bin/python" - <<'PY'
           import base64
           import pathlib
-          import subprocess
           import os
+          from playwright.sync_api import sync_playwright
+          playwright = sync_playwright().start()
+          browser = playwright.chromium.launch(executable_path="/usr/bin/google-chrome")
+          page = browser.new_page()
           for path in sorted((pathlib.Path(os.environ["RUNNER_TEMP"]) / "vision-screens").glob("*/*-viewport.png")):
               name = path.parent.name + "-" + path.stem
-              jpeg = subprocess.check_output(["convert", str(path), "-resize", "900x900>", "-quality", "55", "jpeg:-"])
-              payload = base64.b64encode(jpeg).decode("ascii")
-              print(f"VISION_FRAME {name} {len(jpeg)}", flush=True)
+              src = "data:image/png;base64," + base64.b64encode(path.read_bytes()).decode()
+              payload = page.evaluate("""async src => {
+                  const image = new Image();
+                  image.src = src;
+                  await image.decode();
+                  const canvas = document.createElement('canvas');
+                  const ratio = Math.min(1, 900 / image.width);
+                  canvas.width = Math.round(image.width * ratio);
+                  canvas.height = Math.round(image.height * ratio);
+                  canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height);
+                  return canvas.toDataURL('image/webp', .75).split(',')[1];
+              }""", src)
+              print(f"VISION_FRAME {name} {len(base64.b64decode(payload))}", flush=True)
               for start in range(0, len(payload), 2048):
                   print(f"VISION_CHUNK {name} {start} {payload[start:start+2048]}", flush=True)
+          browser.close()
+          playwright.stop()
           PY
       - name: Save the desktop and mobile renders
         if: ${{ !cancelled() }}

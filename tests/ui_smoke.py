@@ -62,7 +62,7 @@ def exercise_index_states(page, expect, base):
 
     # The export endpoint sees the original fixture, unlike the displayed result.
     downloads = []
-    page.on("download", downloads.append)
+    page.on("download", lambda item: downloads.append(item))
     export.click()
     expect(page.locator("#export-help")).to_contain_text("index changed")
     expect(export).to_be_disabled()
