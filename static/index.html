@@ -1,16 +1,97 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"><title>Vision · Onchain intelligence</title><link rel="stylesheet" href="/static/style.css"><script src="/static/app.js" defer></script></head>
-<body><a class="skip" href="#workspace">Skip to workspace</a><aside class="sidebar"><a class="brand" href="#explore" aria-label="Vision home"><span class="brand-mark">V</span>vision<span class="version">01</span></a><div class="eyebrow workspace-name">INTELLIGENCE WORKSPACE</div><nav aria-label="Workspace"><a href="#explore" class="nav-item active" data-view="explore"><span>01</span> Chain explorer</a><a href="#labels" class="nav-item" data-view="labels"><span>02</span> Label directory</a><a href="#case" class="nav-item" data-view="case"><span>03</span> Reconciliation</a><a href="#scope" class="nav-item" data-view="scope"><span>04</span> Coverage & limits</a></nav><div class="sidebar-bottom"><span class="status-dot"></span> Read-only by design<p>No wallets connected.<br>No transactions signed.</p><span id="version">VISION / V1</span></div></aside>
-<main id="workspace"><header class="topbar"><span>PUBLIC LEDGER / PRIVATE REASONING</span><span id="connection" class="pill">Checking connection</span></header><div class="content"><div class="page-heading"><div><div class="eyebrow">THE ONCHAIN INTELLIGENCE DESK</div><h1>See the activity.<br><span>Keep the evidence.</span></h1><p>Search addresses, trace transfers, and inspect the records behind a result.</p></div><div class="scope-stamp"><span class="orbital" aria-hidden="true">◎</span><span>ETHEREUM<br><strong>Read-only research v1.1</strong></span></div></div>
-<div class="boundary"><span class="pill amber">RESEARCH BUILD</span><span>Public-chain observations and clearly marked synthetic cases. Not a tax assessment or proof of ownership.</span></div>
-<div class="field-link"><span class="field-index" aria-hidden="true">01</span><div><b>Illustrated field note</b><span>How much of a sale is actually a gain?</span></div><a href="/static/report.html">Read the fictional case ↗</a></div>
-<div id="notice" role="status" aria-live="polite" hidden></div>
-<noscript><p class="boundary">This workspace needs JavaScript for search and case review. The JSON API remains available at /api/status and /api/case.</p></noscript>
-<section id="view-explore" class="view"><div class="section-head"><div><div class="eyebrow">01 / EXPLORE</div><h2>Follow the onchain record</h2></div><button id="load-demo" class="text-button">Open sample address ↗</button></div><form id="search-form" class="search-row"><label class="sr-only" for="query">Search address, transaction hash or label</label><input id="query" name="q" type="search" placeholder="Address, transaction hash or label…" maxlength="180" autocomplete="off"><button type="submit" class="primary">Search <span aria-hidden="true">↗</span></button></form>
-<div class="metrics"><div><span>Indexed events</span><strong id="count-events">—</strong><small>Stored records, not total chain activity</small></div><div><span>Address labels</span><strong id="count-labels">—</strong><small>Reference descriptions, not ownership</small></div><div><span>Crawl snapshots</span><strong id="count-crawls">—</strong><small>Bounded, recorded ingestion windows</small></div></div>
-<div class="explorer-layout"><section class="panel events-panel"><div class="panel-title"><h3>Transfer ledger</h3><span id="result-count" class="pill">No query yet</span></div><p id="coverage" class="coverage">Loading local coverage…</p><div class="table-wrap"><table><thead><tr><th>Activity / time</th><th>Route</th><th>Amount</th><th>Evidence</th></tr></thead><tbody id="event-rows"></tbody></table></div><p id="no-events" class="empty" hidden>No matching events in the local index. This is not evidence that an address has no history.</p><details id="record-detail" hidden><summary>Selected source record</summary><pre id="record-json"></pre></details></section>
-<aside class="panel crawl-panel"><div class="eyebrow">LIVE INGESTION</div><h3>Read a chain window.</h3><p>Fetch a bounded set of finalized blocks for an Ethereum address. Previously indexed evidence stays searchable.</p><form id="crawl-form"><label for="crawl-address">Wallet or contract address</label><input id="crawl-address" placeholder="0x…" pattern="0x[0-9a-fA-F]{40}" required autocomplete="off"><label for="crawl-end">End block (optional)</label><input id="crawl-end" type="number" min="0" step="1" placeholder="Latest finalized block"><label for="blocks">Finalized blocks to read</label><select id="blocks"><option value="2">2 blocks · quick check</option><option value="8" selected>8 blocks · small window</option></select><button class="primary" id="crawl-button" type="submit">Crawl chain window ↗</button></form><p id="rpc-help" class="fine">Checking server RPC configuration…</p><div class="identifier-box"><div class="eyebrow">DETECTED IDENTIFIERS</div><ul id="identifiers"><li>Search an address or hash to inspect.</li></ul></div></aside></div></section>
-<section id="view-labels" class="view" hidden><div class="section-head"><div><div class="eyebrow">02 / DIRECTORY</div><h2>Context, with its source.</h2></div></div><p class="lede">Labels describe public contracts or services. They do not establish who controls a wallet.</p><form id="label-form" class="search-row"><label class="sr-only" for="label-query">Search labels</label><input id="label-query" type="search" placeholder="Search a name or address…" maxlength="180"><button class="primary">Find labels ↗</button></form><div id="label-list" class="label-grid"></div></section>
-<section id="view-case" class="view" hidden><div class="section-head"><div><div class="eyebrow">03 / RECONCILIATION</div><h2>Evidence before conclusions.</h2></div><button id="export" class="secondary">Export evidence ↓</button></div><p class="boundary"><span class="pill amber">SYNTHETIC CASE</span>Fictional FIFO example. No approved country pack. No live taxpayer data.</p><div id="case-summary" class="metrics"></div><div class="case-grid"><section class="panel"><div class="panel-title"><h3>Calculation record</h3><span class="pill" id="case-state">Loading</span></div><dl id="case-facts" class="facts"></dl><div id="case-issues"></div><details><summary>Full calculation and lineage</summary><pre id="case-json"></pre></details></section><section class="panel"><div class="eyebrow">HUMAN REVIEW</div><h3>Record the next step.</h3><p>This records a research review only. It cannot issue a notice, determine liability, or open an enforcement action.</p><form id="review-form"><label for="decision">Review decision</label><select id="decision"><option value="needs_data">More data needed</option><option value="reviewed">Research review recorded</option></select><label for="review-note">Reason / next step</label><textarea id="review-note" maxlength="500" aria-describedby="note-limit" rows="4" required placeholder="Record what was checked and what is missing. Do not enter personal taxpayer data."></textarea><small id="note-limit">Up to 500 characters; fictional case notes only.</small><button class="primary" type="submit">Save review</button></form><p id="review-result" class="fine"></p></section></div><section class="panel simulation-panel"><div><div class="eyebrow">FICTIONAL WHAT-IF</div><h3>Change the declaration. Re-run the comparison.</h3><p>Keep the synthetic transaction history fixed and adjust the declared amounts. This preview is not saved and never changes the baseline case, its review, or its evidence export.</p></div><form id="simulate-form"><div class="simulation-inputs"><div><label for="simulate-gains">Declared gains · USD</label><input id="simulate-gains" inputmode="decimal" value="2000" required pattern="-?[0-9]+(\.[0-9]+)?" maxlength="60"></div><div><label for="simulate-income">Declared income · USD</label><input id="simulate-income" inputmode="decimal" value="100" required pattern="[0-9]+(\.[0-9]+)?" maxlength="60"></div></div><button type="submit" class="secondary">Calculate preview ↗</button></form><div id="simulate-result" aria-live="polite" hidden></div></section></section>
-<section id="view-scope" class="view" hidden><div class="eyebrow">04 / COVERAGE & LIMITS</div><h2>A precise window. Not an all-seeing system.</h2><div class="scope-grid"><article class="panel"><span class="scope-number">01</span><h3>Observed, not inferred</h3><p>Live crawling covers bounded Ethereum block windows and supported transfer records. Internal calls, complete lifetime history, offchain accounts and other chains are outside this v1.</p></article><article class="panel"><span class="scope-number">02</span><h3>An address is not a person</h3><p>Public labels and identifiers provide context. Vision does not identify individuals or turn transaction relationships into ownership claims.</p></article><article class="panel"><span class="scope-number">03</span><h3>No price, no conclusion</h3><p>The sample reconciliation uses explicit synthetic sources and a fictional FIFO pack. Missing basis or price inputs must block a complete calculation, not become zero.</p></article><article class="panel"><span class="scope-number">04</span><h3>A research foundation</h3><p>Before real casework: lawful data access, licensed feeds, approved jurisdiction rules, security controls, independent testing and accountable human review.</p></article></div></section>
-<footer>VISION <span>Evidence-led onchain intelligence</span><span>Local research workspace · v1.1</span></footer></div></main></body></html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>Vision · Ethereum evidence workbench</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="/static/app.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#workspace">Skip to workspace</a>
+<aside class="sidebar">
+  <a class="brand" href="#explore" aria-label="Vision home"><span class="brand-mark" aria-hidden="true">V</span>vision</a>
+  <nav aria-label="Workspace">
+    <a href="#explore" class="nav-item active" data-view="explore" aria-current="page">Chain explorer</a>
+    <a href="#labels" class="nav-item" data-view="labels">Label directory</a>
+    <a href="#case" class="nav-item" data-view="case">Reconciliation</a>
+    <a href="#scope" class="nav-item" data-view="scope">Coverage &amp; limits</a>
+  </nav>
+  <div class="sidebar-bottom">Read-only Ethereum research<p>No wallet connection or signing.</p><span id="version">VISION / V1.1</span></div>
+</aside>
+<main id="workspace" tabindex="-1">
+  <header class="topbar"><a class="note-link" href="/static/report.html" aria-label="Read the fictional case"><span class="note-prefix">Field note · </span>Read the fictional case <span aria-hidden="true">↗</span></a><span id="connection" class="pill">Checking index…</span></header>
+  <div class="content">
+    <div id="notice" role="status" aria-live="polite" hidden></div>
+    <noscript><p class="boundary">Enable JavaScript to search or review a case. You can still <a href="/static/report.html">read the illustrated field note</a>.</p></noscript>
+    <section id="view-explore" class="view" aria-labelledby="explore-title">
+      <h1 id="explore-title" tabindex="-1">Explore Ethereum transfers</h1>
+      <p class="lede" id="search-help">Search the local index by address, transaction hash or label. Coverage is limited to saved block windows and fictional examples.</p>
+      <form id="search-form" class="search-row">
+        <label for="query">Search the transfer ledger</label>
+        <input id="query" name="q" type="search" placeholder="Address, transaction hash or label" aria-describedby="search-help" maxlength="180" autocomplete="off">
+        <button type="submit" class="primary">Search</button>
+      </form>
+      <div class="explore-actions">
+        <button id="load-demo" class="text-button" type="button">Try the fictional sample address</button>
+        <button id="jump-import" class="text-button" type="button">Import a block window</button>
+      </div>
+      <dl class="index-counts" aria-label="Local index totals">
+        <div><dt>Indexed events</dt><dd id="count-events">—</dd></div>
+        <div><dt>Address labels</dt><dd id="count-labels">—</dd></div>
+        <div><dt>Saved windows</dt><dd id="count-crawls">—</dd></div>
+      </dl>
+      <div class="explorer-layout">
+        <section class="panel events-panel" aria-labelledby="ledger-title">
+          <div class="panel-title"><h2 id="ledger-title">Transfer ledger</h2><span id="result-count" class="pill" role="status">Loading…</span></div>
+          <p id="coverage" class="coverage">Reading the local index…</p>
+          <p id="source-mix" class="source-mix" hidden></p>
+          <p id="no-events" class="empty" hidden></p>
+          <div class="table-wrap" id="ledger-table" hidden>
+            <table role="table" aria-labelledby="ledger-title">
+              <thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader">Transfer</th><th scope="col" role="columnheader">Amount</th><th scope="col" role="columnheader">Route</th><th scope="col" role="columnheader">Evidence</th></tr></thead>
+              <tbody id="event-rows" role="rowgroup"></tbody>
+            </table>
+          </div>
+          <div id="identifier-box" class="identifier-box" hidden><h3>Query identifiers</h3><ul id="identifiers"></ul></div>
+          <details id="record-detail" hidden>
+            <summary id="source-summary">Selected source record</summary>
+            <pre id="record-json"></pre>
+            <button id="return-record" class="text-button" type="button">Return to transfer</button>
+          </details>
+          <button id="export-search" class="text-button export-search" type="button" hidden>Export indexed evidence ↓</button>
+          <p id="export-help" class="operation-status export-help" role="status" hidden></p>
+        </section>
+        <aside class="panel crawl-panel" aria-labelledby="import-title">
+          <h2 id="import-title">Import a block window</h2>
+          <p>Read supported transfers for one address in a small window of finalized Ethereum blocks.</p>
+          <p id="rpc-help" class="provider-note">Checking the server’s RPC configuration…</p>
+          <form id="crawl-form" aria-describedby="rpc-help">
+            <label for="crawl-address">Wallet or contract address</label>
+            <input id="crawl-address" placeholder="0x…" pattern="0x[0-9a-fA-F]{40}" required autocomplete="off">
+            <label for="crawl-end">End block (optional)</label>
+            <input id="crawl-end" type="number" min="0" step="1" placeholder="Latest finalized block">
+            <label for="blocks">Finalized blocks to read</label>
+            <select id="blocks"><option value="2">2 blocks</option><option value="8" selected>8 blocks</option></select>
+            <button class="primary" id="crawl-button" type="submit" disabled>Import transfers</button>
+          </form>
+          <p id="crawl-result" role="status" class="operation-status" hidden></p>
+        </aside>
+      </div>
+    </section>
+    <section id="view-labels" class="view" aria-labelledby="label-title" hidden>
+      <h1 id="label-title" tabindex="-1">Label directory</h1>
+      <p class="lede">Look up a public contract or fictional example. Each label names its source. Ownership requires separate evidence.</p>
+      <form id="label-form" class="search-row">
+        <label for="label-query">Search by name or address</label>
+        <input id="label-query" type="search" placeholder="Name or address" maxlength="180">
+        <button type="submit" class="primary">Find labels</button>
+      </form>
+      <p id="label-status" role="status" class="operation-status"></p>
+      <div id="label-list" class="label-grid"></div>
+    </section>
+<section id="view-case" class="view" aria-labelledby="case-title" hidden><div class="section-head"><h1 id="case-title" tabindex="-1">Reconcile a fictional declaration</h1><button id="export" class="secondary">Export evidence ↓</button></div><p class="boundary"><span class="pill amber">SYNTHETIC CASE</span>Fictional FIFO example. No approved country pack. No live taxpayer data.</p><div id="case-summary" class="metrics"></div><div class="case-grid"><section class="panel"><div class="panel-title"><h3>Calculation record</h3><span class="pill" id="case-state">Loading</span></div><dl id="case-facts" class="facts"></dl><div id="case-issues"></div><details><summary>Full calculation and lineage</summary><pre id="case-json"></pre></details></section><section class="panel"><div class="eyebrow">HUMAN REVIEW</div><h3>Record the next step.</h3><p>This records a research review only. It cannot issue a notice, determine liability, or open an enforcement action.</p><form id="review-form"><label for="decision">Review decision</label><select id="decision"><option value="needs_data">More data needed</option><option value="reviewed">Research review recorded</option></select><label for="review-note">Reason / next step</label><textarea id="review-note" maxlength="500" aria-describedby="note-limit" rows="4" required placeholder="Record what was checked and what is missing. Do not enter personal taxpayer data."></textarea><small id="note-limit">Up to 500 characters; fictional case notes only.</small><button class="primary" type="submit">Save review</button></form><p id="review-result" class="fine"></p></section></div><section class="panel simulation-panel"><div><div class="eyebrow">FICTIONAL WHAT-IF</div><h3>Change the declaration. Re-run the comparison.</h3><p>Keep the synthetic transaction history fixed and adjust the declared amounts. This preview is not saved and never changes the baseline case, its review, or its evidence export.</p></div><form id="simulate-form"><div class="simulation-inputs"><div><label for="simulate-gains">Declared gains · USD</label><input id="simulate-gains" inputmode="decimal" value="2000" required pattern="-?[0-9]+(\.[0-9]+)?" maxlength="60"></div><div><label for="simulate-income">Declared income · USD</label><input id="simulate-income" inputmode="decimal" value="100" required pattern="[0-9]+(\.[0-9]+)?" maxlength="60"></div></div><button type="submit" class="secondary">Calculate preview ↗</button></form><div id="simulate-result" aria-live="polite" hidden></div></section></section>
+<section id="view-scope" class="view" aria-labelledby="scope-title" hidden><h1 id="scope-title" tabindex="-1">Coverage &amp; limits</h1><div class="scope-grid"><article class="panel"><h3>Observed, not inferred</h3><p>Live crawling covers bounded Ethereum block windows and supported transfer records. Internal calls, complete lifetime history, offchain accounts and other chains are outside this v1.</p></article><article class="panel"><h3>An address is not a person</h3><p>Public labels and identifiers provide context. Vision does not identify individuals or turn transaction relationships into ownership claims.</p></article><article class="panel"><h3>No price, no conclusion</h3><p>The sample reconciliation uses explicit synthetic sources and a fictional FIFO pack. Missing basis or price inputs must block a complete calculation, not become zero.</p></article><article class="panel"><h3>A research foundation</h3><p>Before real casework: lawful data access, licensed feeds, approved jurisdiction rules, security controls, independent testing and accountable human review.</p></article></div></section>
+
+<footer>Vision · Local research workspace <span>v1.1</span></footer></div></main></body></html>

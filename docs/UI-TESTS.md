@@ -37,18 +37,23 @@ VISION_UI_SCREENSHOTS=/tmp/vision-ui-screenshots python tests/ui_smoke.py
 The test starts the actual `app.py` server on an operating-system-assigned loopback
 port and a temporary SQLite database. It clears `VISION_RPC_URL` and `VISION_DB`
 from the child environment, never reads the operator's database, and terminates
-the child server in `finally`. All API responses are real server responses. It
+the child server in `finally`. Most checks use the loopback server. A small set of intercepted test responses
+covers delayed reads, a mixed-source preview, a directory error, and the import
+control when a provider is configured. The import request still reaches the
+RPC-disabled loopback server. The test
 does not call external RPCs or mutate a real case.
 
 Checks include:
 
 - Initial fixture records and data-boundary badges.
-- Sample lookup, empty search, source-record detail, label search and navigation.
+- Sample lookup, loading, recovery, empty and failed searches, source-record keyboard focus and return.
+- Export availability, mixed-source labeling, changed snapshots and the intentional all-records query.
+- Label search, directory failure, navigation focus and preserving the active view on skip.
 - Missing-RPC crawl error, with no fabricated success records.
 - Fictional calculation, unsaved what-if preview, and unchanged baseline evidence.
 - Saved synthetic review and downloaded JSON evidence.
 - Hash navigation and browser Back.
-- Horizontal overflow at 1440, 768, and 390 pixels, across all four views.
+- Horizontal overflow at 1440, 768, 390, and 320 pixels, across all four views.
 - Uncaught browser JavaScript errors.
 
 This is a smoke test, not a full accessibility audit, visual regression suite,

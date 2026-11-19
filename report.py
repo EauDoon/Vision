@@ -45,11 +45,13 @@ def graphic(sale):
 def outputs():
     data = demo_case()
     r = reconcile(data)
-    if r['status'] != 'illustrative' or not r['evidence_hash'] or len(r['disposals']) != 1:
+    if r['status'] != 'illustrative' or not r['evidence_hash'] or len(r['disposals']) != 1 or len(r['income_events']) != 1:
         raise ValueError('Report withheld: the frozen worked case is incomplete or its shape changed.')
     sale, = r['disposals']
     chart = graphic(sale)
     events = {e['id']: e for e in data['events']}
+    income_event, = r['income_events']
+    reward = events[income_event['event_id']]
     rows = []
     for match in sale['matches']:
         e = events[match['acquisition_id']]
@@ -57,6 +59,8 @@ def outputs():
     compare = ''.join(f'<tr><th>{name}</th><td>{money(r["totals"][key])}</td><td>{money(r["declared"][key])}</td><td><b>{money(r["differences"][key])}</b></td></tr>' for key, name in [('realized_gains','Realized gain'),('income','Income')])
     refs = ''.join(f'<li><b>{escape(e["id"])}</b><span>{escape(e["source_ref"])}</span><span>{escape(e["price_source"])}</span></li>' for e in data['events'])
     mapping = {'gain':money(r['totals']['realized_gains']), 'basis':money(sale['basis']), 'firstcost':money(sale['matches'][0]['basis']), 'secondcost':money(sale['matches'][1]['basis']), 'sale':money(sale['proceeds']), 'quantity':escape(sale['quantity']), 'table':''.join(rows), 'compare':compare, 'refs':refs, 'gdiff':money(r['differences']['realized_gains']), 'idiff':money(r['differences']['income']), 'hash':escape(r['evidence_hash']), 'start':escape(r['period']['start']), 'end':escape(r['period']['end'])}
+    mapping.update(reward_id=escape(reward['id']), reward_quantity=escape(reward['quantity']),
+                   reward_price=money(reward['unit_price']), reward_amount=money(income_event['amount']))
     page = (ROOT/'templates'/'report.html').read_text(encoding='utf-8')
     from string import Template
     html = Template(page).substitute(mapping)

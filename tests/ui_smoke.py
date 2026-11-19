@@ -5,6 +5,7 @@ Never reads the operator's database or calls a live RPC. See docs/UI-TESTS.md.
 """
 from __future__ import annotations
 
+import copy
 import json
 import os
 from pathlib import Path
@@ -16,6 +17,80 @@ import tempfile
 import threading
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+def exercise_index_states(page, expect, base):
+    """Use only the local fixture and intercepted responses for transient states."""
+    sample = page.request.get(base + "/api/status").json()["demo_address"]
+    page.locator("#load-demo").click()
+    expect(page.locator("#source-mix")).to_have_text("6 fictional")
+    export = page.locator("#export-search")
+    expect(export).to_be_enabled()
+
+    page.locator("#query").fill("fixture-pending")
+    expect(export).to_be_disabled()
+    held = []
+    pending_url = "**/api/search?q=fixture-pending"
+    def hold(route):
+        held.append(route)
+    page.route(pending_url, hold)
+    with page.expect_request(lambda request: request.url.endswith("q=fixture-pending")):
+        page.locator("#query").press("Enter")
+    expect(page.locator("#result-count")).to_have_text("Searching…")
+    expect(page.locator("#event-rows tr")).to_have_count(0)
+    expect(export).to_be_hidden()
+    expect(page.locator("#no-events")).to_be_hidden()
+    held[0].fulfill(status=503, json={"error": "Fixture index paused."})
+    expect(page.locator("#result-count")).to_have_text("Search unavailable")
+    expect(page.locator("#coverage")).to_contain_text("Fixture index paused.")
+    expect(export).to_be_hidden()
+    page.unroute(pending_url, hold)
+
+    # Model one indexed chain observation sharing a fictional address. All values
+    # originate in the synthetic fixture; no RPC or external address is queried.
+    preview = page.request.get(base + "/api/search?q=" + sample).json()
+    mixed = copy.deepcopy(preview)
+    mixed["events"] = mixed["events"][:2]
+    mixed["events"][1]["dataset"] = "live"
+    url = "**/api/search?q=" + sample
+    page.route(url, lambda route: route.fulfill(json=mixed))
+    page.locator("#load-demo").click()
+    expect(page.locator("#source-mix")).to_have_text("1 fictional · 1 live")
+    expect(page.locator("#coverage")).to_contain_text("fictional sample address")
+    expect(page.locator("#event-rows")).to_contain_text("LIVE")
+
+    # The export endpoint sees the original fixture, unlike the displayed result.
+    downloads = []
+    page.on("download", downloads.append)
+    export.click()
+    expect(page.locator("#export-help")).to_contain_text("index changed")
+    expect(export).to_be_disabled()
+    assert not downloads
+    page.unroute(url)
+    page.locator("#query").fill("")
+    page.locator("#query").press("Enter")
+    expect(page.locator("#source-mix")).to_have_text("6 fictional")
+    with page.expect_download() as downloaded:
+        export.click()
+    data = json.loads(Path(downloaded.value.path()).read_text())
+    assert data["query"] == ""
+    assert data["snapshot"] == page.request.get(base + "/api/search?q=").json()
+
+    # A provider-availability fixture enables the normal import button. The
+    # actual loopback server still has RPC off and returns its real 503 response.
+    status = page.request.get(base + "/api/status").json()
+    status["rpc_configured"] = True
+    page.route("**/api/status", lambda route: route.fulfill(json=status))
+    page.reload()
+    page.locator("#jump-import").focus()
+    page.keyboard.press("Enter")
+    expect(page.locator("#crawl-address")).to_be_focused()
+    page.locator("#crawl-address").fill(sample)
+    page.locator("#crawl-button").click()
+    expect(page.locator("#crawl-result")).to_contain_text("No provider configured")
+    expect(page.locator("#crawl-button")).to_be_enabled()
+    page.unroute("**/api/status")
+    page.reload()
 
 
 def main():
@@ -60,25 +135,32 @@ def main():
                         out = Path(os.environ["VISION_UI_SCREENSHOTS"])
                         out.mkdir(parents=True, exist_ok=True)
                         page.screenshot(path=str(out / "desktop.png"), full_page=True)
+                        page.screenshot(path=str(out / "desktop-viewport.png"))
                     page.get_by_role("link",name="Read the fictional case").click()
                     expect(page.get_by_role("heading",level=1)).to_contain_text("actually a gain")
                     page.get_by_text("Inspect the four fixture records and their price sources").click()
                     expect(page.locator(".sources")).to_contain_text("synthetic://ledger/opening-1")
-                    for width in (1440, 768, 390):
+                    for width in (1440, 768, 390, 320):
                         page.set_viewport_size({"width":width,"height":900})
                         assert page.evaluate("document.documentElement.scrollWidth <= innerWidth"), f"Report overflow: {width}px"
                     page.set_viewport_size({"width":1440,"height":1050})
                     page.go_back()
                     page.locator("#load-demo").click()
                     expect(page.locator("#query")).to_have_value(re.compile(r"^0x[0-9a-f]{40}$"))
-                    page.locator(".record-button").first.click()
+                    page.locator(".record-button").first.focus()
+                    page.keyboard.press("Enter")
+                    expect(page.locator("#source-summary")).to_be_focused()
                     expect(page.locator("#record-detail")).to_be_visible()
                     expect(page.locator("#record-json")).to_contain_text('"dataset": "synthetic"')
-                    # Server failure is displayed without making up live records.
-                    page.locator("#crawl-address").fill("0x" + "a" * 40)
-                    page.locator("#crawl-button").click()
-                    expect(page.locator("#notice")).to_contain_text("No provider configured")
-                    expect(page.locator("#crawl-button")).to_be_enabled()
+                    page.keyboard.press("Tab")
+                    if page.locator("#record-json").evaluate("(el) => el === document.activeElement"):
+                        page.keyboard.press("Tab")
+                    expect(page.locator("#return-record")).to_be_focused()
+                    page.keyboard.press("Enter")
+                    expect(page.locator(".record-button").first).to_be_focused()
+                    expect(page.locator("#crawl-button")).to_be_disabled()
+                    expect(page.locator("#rpc-help")).to_contain_text("Import unavailable")
+                    exercise_index_states(page, expect, base)
                     page.locator("#query").fill("no-such-record-vision-ui-test")
                     page.locator('#search-form button').click()
                     expect(page.locator("#no-events")).to_be_visible()
@@ -86,11 +168,28 @@ def main():
                     expect(page.locator("#event-rows tr")).to_have_count(6)
                     page.locator('[data-view="labels"]').click()
                     expect(page.locator(".label-card")).to_have_count(6)
-                    page.locator("#label-query").fill("USDC")
+                    expect(page.locator("#label-title")).to_be_focused()
+                    expect(page.locator("#label-list")).to_contain_text("REFERENCE")
+                    page.locator("#label-query").fill("no-fixture-label")
+                    page.locator("#label-query").press("Enter")
+                    expect(page.locator("#label-status")).to_contain_text("No matching labels")
+                    # A directory request failure must be different from an empty result.
+                    page.route("**/api/search?q=paused-label", lambda route: route.fulfill(status=503, json={"error": "Fixture paused."}))
+                    page.locator("#label-query").fill("paused-label")
+                    page.locator("#label-query").press("Enter")
+                    expect(page.locator("#label-status")).to_contain_text("Directory unavailable")
+                    page.unroute("**/api/search?q=paused-label")
+                    page.locator("#label-query").fill("Atlas")
                     page.locator("#label-form button").click()
                     expect(page.locator(".label-card")).to_have_count(1)
-                    expect(page.locator(".label-card")).to_contain_text("REFERENCE")
+                    expect(page.locator(".label-card")).to_contain_text("SYNTHETIC")
                     page.locator(".label-card button").click()
+                    expect(page.locator("#view-explore")).to_be_visible()
+                    expect(page.locator("#explore-title")).to_be_focused()
+                    page.go_back()
+                    expect(page.locator("#label-query")).to_have_value("Atlas")
+                    expect(page.locator(".label-card")).to_have_count(1)
+                    page.go_forward()
                     expect(page.locator("#view-explore")).to_be_visible()
                     page.locator('[data-view="case"]').click()
                     expect(page.locator("#case-state")).to_have_text("illustrative")
@@ -111,19 +210,26 @@ def main():
                     assert payload["result"]["evidence_hash"] == original["result"]["evidence_hash"]
                     page.locator('[data-view="scope"]').click()
                     expect(page.locator("#view-scope")).to_be_visible()
+                    page.locator(".skip").focus()
+                    page.keyboard.press("Enter")
+                    expect(page.locator("#scope-title")).to_be_focused()
+                    assert page.url.endswith("#scope")
                     page.go_back()
                     expect(page.locator("#view-case")).to_be_visible()
-                    for width in (1440, 768, 390):
+                    for width in (1440, 768, 390, 320):
                         page.set_viewport_size({"width": width, "height": 900})
                         for view in ("explore", "labels", "case", "scope"):
                             page.locator('[data-view="' + view + '"]').click()
                             expect(page.locator("#view-" + view)).to_be_visible()
                             assert page.evaluate("document.documentElement.scrollWidth <= innerWidth"), f"Overflow: {view}, {width}px"
+                    page.set_viewport_size({"width": 390, "height": 844})
                     page.locator('[data-view="explore"]').click()
                     page.locator("#load-demo").click()
                     expect(page.locator("#event-rows tr")).to_have_count(6)
                     if os.getenv("VISION_UI_SCREENSHOTS"):
+                        page.evaluate("window.scrollTo(0, 0)")
                         page.screenshot(path=str(out / "mobile.png"), full_page=True)
+                        page.screenshot(path=str(out / "mobile-viewport.png"))
                     with page.expect_download() as event:
                         page.locator(".export-search").click()
                     index = json.loads(Path(event.value.path()).read_text())
