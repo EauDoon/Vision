@@ -70,6 +70,53 @@ class ChainTests(unittest.TestCase):
         with self.assertRaisesRegex(ChainError, 'disagrees with transaction receipt'):
             self.run_crawl(f)
 
+    def test_each_filter_must_include_scoped_logs_from_a_receipt_found_by_the_other(self):
+        for omitted in ('sender', 'recipient', None):
+            with self.subTest(omitted=omitted):
+                f = Fixture()
+                f.block['transactions'] = []  # Only a log filter can discover the receipt.
+                outgoing, = f.logs
+                outgoing['topics'][2] = topic(B)
+                incoming = {**outgoing, 'topics': [TRANSFER, topic(B), topic(A)], 'logIndex': '0x1'}
+                f.logs.append(incoming)
+
+                def directional_reply(p, r):
+                    if p['method'] == 'eth_getLogs':
+                        sender = len(p['params'][0]['topics']) == 2
+                        direction = 'sender' if sender else 'recipient'
+                        r['result'] = [] if omitted == direction else [outgoing if sender else incoming]
+
+                f.mutate = directional_reply
+                if omitted:
+                    with self.assertRaisesRegex(ChainError, 'missing from its filter'):
+                        self.run_crawl(f)
+                else:
+                    self.assertEqual([row['log_index'] for row in self.run_crawl(f)['events']], [0, 1])
+
+    def test_self_transfer_requires_both_filters_but_is_indexed_once(self):
+        f = Fixture()
+        f.block['transactions'] = []
+
+        def sender_only(p, r):
+            if p['method'] == 'eth_getLogs' and len(p['params'][0]['topics']) == 3:
+                r['result'] = []
+
+        self.assertEqual(len(self.run_crawl(f)['events']), 1)
+        f.mutate = sender_only
+        with self.assertRaisesRegex(ChainError, 'missing from its filter'):
+            self.run_crawl(f)
+
+    def test_native_transfer_receipt_can_reveal_missing_token_filter_rows(self):
+        f = Fixture()
+
+        def empty_filters(p, r):
+            if p['method'] == 'eth_getLogs':
+                r['result'] = []
+
+        f.mutate = empty_filters
+        with self.assertRaisesRegex(ChainError, 'missing from its filter'):
+            self.run_crawl(f)
+
     def test_root_only_receipt_has_specific_coverage_error(self):
         f = Fixture()
         del f.receipt['status']

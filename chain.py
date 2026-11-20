@@ -134,6 +134,8 @@ def crawl(address, *, rpc_url, start=None, end=None, max_blocks=8, http_send=Non
     Optional ``http_send(url, JSON_payload) -> JSON_response`` enables fixture tests.
     An optional observer receives (phase, method, params, result) at each request
     and valid JSON-RPC envelope, including replies the importer later rejects.
+    Successful receipts already fetched must agree with both address filters.
+    Receipts not fetched cannot establish that a filter result is complete.
     A failure aborts the entire crawl: callers must never record partial success.
     Persist block hashes and compare overlaps on later ingestion. Finality is the
     configured provider's assertion, not an independently verified consensus proof.
@@ -261,7 +263,8 @@ def crawl(address, *, rpc_url, start=None, end=None, max_blocks=8, http_send=Non
             if status:
                 add_event(tx_hash, block, 'native_transfer', source, target, amount)
 
-    for topics in ([TRANSFER, padded], [TRANSFER, None, padded]):
+    filtered = (set(), set())
+    for direction, topics in enumerate(([TRANSFER, padded], [TRANSFER, None, padded])):
         logs = rpc('eth_getLogs', [{'fromBlock': hex(start), 'toBlock': hex(end), 'topics': topics}])
         if not isinstance(logs, list) or len(logs) > MAX_EVENTS:
             raise ChainError('Invalid or oversized log response.')
@@ -285,8 +288,8 @@ def crawl(address, *, rpc_url, start=None, end=None, max_blocks=8, http_send=Non
                 if not HASH.fullmatch(topic) or topic[2:26] != '0' * 24:
                     raise ChainError('Malformed indexed address.')
                 decoded.append(normalize_address('0x' + topic[-40:]))
-            if address not in decoded:
-                raise ChainError('Provider returned an unrelated transfer.')
+            if decoded[direction] != address:
+                raise ChainError('Provider returned a transfer outside the requested filter direction.')
             if not isinstance(log.get('data'), str) or not HASH.fullmatch(log['data']):
                 raise ChainError('Malformed ERC-20 transfer amount.')
             tx_hash = _hash(log.get('transactionHash'))
@@ -296,7 +299,20 @@ def crawl(address, *, rpc_url, start=None, end=None, max_blocks=8, http_send=Non
                 index = evidence.index
                 if witnesses.get(index) != evidence:
                     raise ChainError('Filter log disagrees with transaction receipt; window withheld.')
+                filtered[direction].add((tx_hash, index))
                 add_event(tx_hash, blocks[number], 'erc20_transfer', *decoded, int(log['data'], 16), evidence.contract, index)
+
+    # Either filter (or the native transfer pass) can discover a successful
+    # receipt. Wait for both replies, then reconcile all those known logs.
+    for status, _, _, witnesses in receipts.values():
+        if status != 1:
+            continue
+        for index, evidence in witnesses.items():
+            key = (evidence.tx_hash, index)
+            if any(topic == padded and key not in filtered[direction]
+                   for direction, topic in enumerate(evidence.topics[1:])):
+                raise ChainError('Transaction receipt contains a scoped transfer missing from its filter; window withheld.')
+
     check = rpc('eth_getBlockByNumber', [hex(end), False])
     if not isinstance(check, dict) or _hash(check.get('hash')) != blocks[end]['hash']:
         raise ChainError('Canonical block changed during crawl; nothing was committed.')
