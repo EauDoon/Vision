@@ -29,6 +29,10 @@ class ChainError(ValueError):
     """Safe, credential-free error for the API boundary."""
 
 
+class TransportError(ChainError):
+    """The configured provider could not be reached through the normal transport."""
+
+
 def normalize_address(value):
     if not isinstance(value, str) or not ADDRESS.fullmatch(value):
         raise ChainError('Expected a 20-byte hexadecimal EVM address.')
@@ -75,7 +79,7 @@ def _http_send(url, payload, deadline):
     try:
         addresses = socket.getaddrinfo(host, 443, type=socket.SOCK_STREAM)
         if not addresses or any(not ipaddress.ip_address(row[4][0]).is_global for row in addresses):
-            raise ChainError('RPC provider must resolve to public network addresses.')
+            raise TransportError('RPC provider must resolve to public network addresses.')
         request = Request(url, json.dumps(payload).encode(), {'Content-Type': 'application/json', 'User-Agent': 'Vision/1.0'})
         # Do not inherit proxy credentials or allow redirect-based endpoint changes.
         from urllib.request import ProxyHandler
@@ -93,6 +97,8 @@ def _http_send(url, payload, deadline):
         return json.loads(body)
     except ChainError:
         raise
+    except OSError:
+        raise TransportError('RPC provider unavailable or returned unreadable data.') from None
     except Exception:
         raise ChainError('RPC provider unavailable or returned unreadable data.') from None
 
@@ -119,13 +125,15 @@ def _log_evidence(log):
     )
 
 
-def crawl(address, *, rpc_url, start=None, end=None, max_blocks=8, http_send=None):
+def crawl(address, *, rpc_url, start=None, end=None, max_blocks=8, http_send=None, observer=None):
     """Return finalized native transfers + ERC-20-shaped logs for one address.
 
     ``rpc_url`` is server/operator configuration, never a client-supplied URL.
     Hosts are allowlisted using VISION_RPC_ALLOWED_HOSTS (comma separated), in
     addition to DEFAULT_HOSTS. Ethereum mainnet only; no silent chain fallback.
     Optional ``http_send(url, JSON_payload) -> JSON_response`` enables fixture tests.
+    An optional observer receives (phase, method, params, result) at each request
+    and valid JSON-RPC envelope, including replies the importer later rejects.
     A failure aborts the entire crawl: callers must never record partial success.
     Persist block hashes and compare overlaps on later ingestion. Finality is the
     configured provider's assertion, not an independently verified consensus proof.
@@ -149,6 +157,8 @@ def crawl(address, *, rpc_url, start=None, end=None, max_blocks=8, http_send=Non
             raise ChainError('Crawl request budget exhausted; use a smaller range.')
         try:
             payload = {'jsonrpc': '2.0', 'id': sequence, 'method': method, 'params': params}
+            if observer is not None:
+                observer('request', method, params, None)
             reply = http_send(rpc_url, payload) if http_send else _http_send(rpc_url, payload, deadline)
             _remaining(deadline)
         except ChainError:
@@ -157,6 +167,8 @@ def crawl(address, *, rpc_url, start=None, end=None, max_blocks=8, http_send=Non
             raise ChainError('RPC request failed.') from None
         if not isinstance(reply, dict) or reply.get('id') != sequence or reply.get('jsonrpc') != '2.0' or 'error' in reply or reply.get('result') is None:
             raise ChainError('RPC provider returned an error or incomplete response.')
+        if observer is not None:
+            observer('response', method, params, reply['result'])
         return reply['result']
 
     chain_id = _quantity(rpc('eth_chainId', []))

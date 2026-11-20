@@ -1,0 +1,210 @@
+{
+  "schema": "vision/provider-capture@1",
+  "captured_at": "2026-11-20T08:17:54+00:00",
+  "source_mode": "public_rpc",
+  "scope": {
+    "chain_id": 1,
+    "address": "0xba12222222228d8ba445958a75a0704d566bf2c8",
+    "blocks": [
+      22431084,
+      17034870,
+      17034869
+    ],
+    "predicate": "Successful receipt, three-topic Transfer, Vault as indexed sender or recipient.",
+    "unit": "Raw integer strings in the emitting contract's units.",
+    "exclusions": [
+      "Native ETH",
+      "Internal movements"
+    ]
+  },
+  "providers": [
+    {
+      "id": "publicnode",
+      "name": "Allnodes PublicNode",
+      "endpoint": "https://ethereum-rpc.publicnode.com",
+      "blocks": [
+        {
+          "block_number": 22431084,
+          "address": "0xba12222222228d8ba445958a75a0704d566bf2c8",
+          "pinned_block_hash": "0x50c8cab760b2948349c590461b166773c45d8f4858cccf5a43025ab2960152e8",
+          "attempted": true,
+          "started_at": "2026-11-20T08:17:48+00:00",
+          "stage": "chain_id",
+          "error_kind": "transport",
+          "error": "RPC provider unavailable or returned unreadable data.",
+          "chain_id": null,
+          "block_hash": null,
+          "count": null,
+          "rows": null,
+          "witness": {
+            "finalized_height": null,
+            "requested_block_number": null,
+            "end_block_number": null,
+            "end_block_hash": null,
+            "filter_counts": {
+              "sender": null,
+              "recipient": null
+            },
+            "filter_rows": {
+              "sender": null,
+              "recipient": null
+            },
+            "receipts": []
+          }
+        },
+        {
+          "block_number": 17034870,
+          "address": "0xba12222222228d8ba445958a75a0704d566bf2c8",
+          "pinned_block_hash": "0xe22c56f211f03baadcc91e4eb9a24344e6848c5df4473988f893b58223f5216c",
+          "attempted": false,
+          "started_at": null,
+          "stage": "not_run",
+          "error_kind": "not_run",
+          "error": "Skipped after this provider's transport failed during preflight.",
+          "chain_id": null,
+          "block_hash": null,
+          "count": null,
+          "rows": null,
+          "witness": {
+            "finalized_height": null,
+            "requested_block_number": null,
+            "end_block_number": null,
+            "end_block_hash": null,
+            "filter_counts": {
+              "sender": null,
+              "recipient": null
+            },
+            "filter_rows": {
+              "sender": null,
+              "recipient": null
+            },
+            "receipts": []
+          }
+        },
+        {
+          "block_number": 17034869,
+          "address": "0xba12222222228d8ba445958a75a0704d566bf2c8",
+          "pinned_block_hash": "0xc2558f8143d5f5acb8382b8cb2b8e2f1a10c8bdfeededad850eaca048ed85d8f",
+          "attempted": false,
+          "started_at": null,
+          "stage": "not_run",
+          "error_kind": "not_run",
+          "error": "Skipped after this provider's transport failed during preflight.",
+          "chain_id": null,
+          "block_hash": null,
+          "count": null,
+          "rows": null,
+          "witness": {
+            "finalized_height": null,
+            "requested_block_number": null,
+            "end_block_number": null,
+            "end_block_hash": null,
+            "filter_counts": {
+              "sender": null,
+              "recipient": null
+            },
+            "filter_rows": {
+              "sender": null,
+              "recipient": null
+            },
+            "receipts": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "1rpc",
+      "name": "Automata 1RPC",
+      "endpoint": "https://public.1rpc.io/eth",
+      "blocks": [
+        {
+          "block_number": 22431084,
+          "address": "0xba12222222228d8ba445958a75a0704d566bf2c8",
+          "pinned_block_hash": "0x50c8cab760b2948349c590461b166773c45d8f4858cccf5a43025ab2960152e8",
+          "attempted": true,
+          "started_at": "2026-11-20T08:17:53+00:00",
+          "stage": "chain_id",
+          "error_kind": "transport",
+          "error": "RPC provider unavailable or returned unreadable data.",
+          "chain_id": null,
+          "block_hash": null,
+          "count": null,
+          "rows": null,
+          "witness": {
+            "finalized_height": null,
+            "requested_block_number": null,
+            "end_block_number": null,
+            "end_block_hash": null,
+            "filter_counts": {
+              "sender": null,
+              "recipient": null
+            },
+            "filter_rows": {
+              "sender": null,
+              "recipient": null
+            },
+            "receipts": []
+          }
+        },
+        {
+          "block_number": 17034870,
+          "address": "0xba12222222228d8ba445958a75a0704d566bf2c8",
+          "pinned_block_hash": "0xe22c56f211f03baadcc91e4eb9a24344e6848c5df4473988f893b58223f5216c",
+          "attempted": false,
+          "started_at": null,
+          "stage": "not_run",
+          "error_kind": "not_run",
+          "error": "Skipped after this provider's transport failed during preflight.",
+          "chain_id": null,
+          "block_hash": null,
+          "count": null,
+          "rows": null,
+          "witness": {
+            "finalized_height": null,
+            "requested_block_number": null,
+            "end_block_number": null,
+            "end_block_hash": null,
+            "filter_counts": {
+              "sender": null,
+              "recipient": null
+            },
+            "filter_rows": {
+              "sender": null,
+              "recipient": null
+            },
+            "receipts": []
+          }
+        },
+        {
+          "block_number": 17034869,
+          "address": "0xba12222222228d8ba445958a75a0704d566bf2c8",
+          "pinned_block_hash": "0xc2558f8143d5f5acb8382b8cb2b8e2f1a10c8bdfeededad850eaca048ed85d8f",
+          "attempted": false,
+          "started_at": null,
+          "stage": "not_run",
+          "error_kind": "not_run",
+          "error": "Skipped after this provider's transport failed during preflight.",
+          "chain_id": null,
+          "block_hash": null,
+          "count": null,
+          "rows": null,
+          "witness": {
+            "finalized_height": null,
+            "requested_block_number": null,
+            "end_block_number": null,
+            "end_block_hash": null,
+            "filter_counts": {
+              "sender": null,
+              "recipient": null
+            },
+            "filter_rows": {
+              "sender": null,
+              "recipient": null
+            },
+            "receipts": []
+          }
+        }
+      ]
+    }
+  ]
+}

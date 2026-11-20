@@ -54,7 +54,7 @@ class Workbench(unittest.TestCase):
 
     def test_02_search_types_and_dataset_labels(self):
         status=self.req('/api/status')[1]
-        self.assertEqual(status['version'],'1.2.0')
+        self.assertEqual(status['version'],'1.3.0')
         self.assertEqual(status['demo_address'],DEMO_ADDRESS)
         for q in ('Atlas',DEMO_ADDRESS,'eip155:1:'+DEMO_ADDRESS):
             data=self.req('/api/search?q='+quote(q))[1]
@@ -155,3 +155,35 @@ class Workbench(unittest.TestCase):
         self.assertEqual(self.req('/api/transfer-review', {})[0], 404)
         self.assertEqual(self.req('/api/transfer-review?end=1')[0], 400)
         self.assertEqual((self.store.status(), self.store.scans()), before)
+
+    def test_09_replay_dashboard_serves_same_packet_and_preserves_v12(self):
+        from replay_compare import packet_bytes
+        before = self.store.status(), self.store.scans()
+        release_packet = packet_bytes()
+        for path in ('/api/replay-compare', '/replay/packet.json'):
+            self.assertEqual(self.req(path, raw=True), (200, release_packet))
+            self.assertEqual(self.req(path, {})[0], 404)
+            self.assertEqual(self.req(path + '?end=1')[0], 400)
+        self.assertIn(b'Balancer Vault replay comparison', self.req('/replay/', raw=True)[1])
+        v12 = self.req('/api/transfer-review')[1]
+        self.assertEqual(v12['schema'], 'vision/transfer-review@1')
+        self.assertEqual(json.loads(release_packet)['fixture_packet_sha256'], v12['sha256'])
+        self.assertEqual((self.store.status(), self.store.scans()), before)
+
+    def test_10_startup_freezes_supplied_capture(self):
+        import app
+        from replay_compare import CAPTURE_PATH, packet_bytes
+        from unittest.mock import patch
+
+        capture = json.loads(CAPTURE_PATH.read_bytes())
+        capture['captured_at'] = '2026-10-01T00:00:00Z'
+        expected = packet_bytes(capture)
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / 'capture.json'
+            path.write_text(json.dumps(capture))
+            def inspect_server(server):
+                path.unlink()
+                self.assertEqual(server.replay_packet, expected)
+            argv = ['app.py', '--replay-capture', str(path), '--port', '0', '--db', str(Path(temp) / 'db')]
+            with patch('sys.argv', argv), patch('app.os.umask'), patch.object(VisionServer, 'serve_forever', inspect_server):
+                app.main()

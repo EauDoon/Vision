@@ -273,7 +273,7 @@ async function loadCase(){const serial=++state.caseSerial;const data=await reque
 async function refreshStatus() {
   const status = await request('/api/status');
   state.status = status;
-  $('version').textContent = 'VISION / ' + (status.version || 'V1.2');
+  $('version').textContent = 'VISION / ' + (status.version || 'V1.3');
   $('connection').textContent = status.rpc_configured ? 'RPC configured' : 'RPC not configured';
   for (const key of ['events', 'labels', 'crawls']) {
     $('count-' + key).textContent = Number.isInteger(status.counts?.[key]) ? String(status.counts[key]) : 'Unknown';

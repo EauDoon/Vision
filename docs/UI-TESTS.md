@@ -60,6 +60,7 @@ Checks include:
 - Missing-RPC crawl error, with no fabricated success records.
 - Fictional calculation, unsaved what-if preview, and unchanged baseline evidence.
 - Saved synthetic review and downloaded JSON evidence.
+- Replay comparison filters, failed and skipped provider reads, labeled diagnostic examples, field-level differences and incomplete witnesses. The test inspects the responsive dashboard and checks the downloaded comparison against its preview, response bytes, canonical digest and offline verifier.
 - Balancer Vault decisions, transfer rows, filter counts and final header check. With the packet endpoint then unavailable, the actual download must match the preview and original response byte for byte. The suite checks the displayed digest and runs the offline verifier on the downloaded file.
 - Hash navigation and browser Back.
 - Horizontal overflow at 1440, 768, 390, and 320 pixels across the dashboard views.
