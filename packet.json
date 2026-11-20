@@ -1,0 +1,1223 @@
+{
+  "schema": "vision/replay-compare@1",
+  "scope": {
+    "chain_id": 1,
+    "address": "0xba12222222228d8ba445958a75a0704d566bf2c8",
+    "blocks": [
+      22431084,
+      17034870,
+      17034869
+    ],
+    "predicate": "Successful receipt, three-topic Transfer, Vault as indexed sender or recipient.",
+    "unit": "Raw integer strings in the emitting contract's units.",
+    "exclusions": [
+      "Native ETH",
+      "Internal movements"
+    ]
+  },
+  "archive": {
+    "repository": "https://github.com/ethereum/portal-spec-tests",
+    "revision": "938744a83d4f85dcdcf9bac12b798e15f2eac2b1",
+    "license": "MIT"
+  },
+  "fixture_packet_sha256": "494a8f18c04b3f1ce533eeb00ad979b5d7ddb5036f8b4f6d976f12ef4929583c",
+  "capture": {
+    "captured_at": "2026-11-20T08:17:54+00:00",
+    "sha256": "eac94ede47b9f5ca728cac3276d14824f6c66de70c8459c49982ddfb80a55b79"
+  },
+  "sources": [
+    {
+      "id": "fixture",
+      "label": "Constructed fixture replay",
+      "kind": "fixture",
+      "description": "The importer read constructed RPC responses from the pinned receipt projections.",
+      "captured_at": null,
+      "endpoint": null,
+      "blocks": [
+        {
+          "block_number": 22431084,
+          "archive": {
+            "path": "tests/mainnet/history/block_data/block-data-22431084.yaml",
+            "sha256": "1d2bc4903770dacaddbe8c1d4c0462190c6ca88c107505c930b357ef5e8b265b",
+            "fixture_sha256": "20e4ff150e212354380748886d51cc6b44eaff9d4232ec379a34f98ab0ca108d"
+          },
+          "coverage": {
+            "receipts": 95,
+            "logs": 233,
+            "receipts_examined": 95,
+            "logs_examined": 233,
+            "complete": true
+          },
+          "expected": {
+            "block_hash": "0x50c8cab760b2948349c590461b166773c45d8f4858cccf5a43025ab2960152e8",
+            "rows": [
+              {
+                "tx_hash": "0xcd474a3f5b5e3995dc1c2c0c6d63ce14787cea8c1203af11c7170a7d62985da4",
+                "log_index": 138,
+                "contract": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+                "from_address": "0x16d5a408e807db8ef7c578279beeee6b228f1c1c",
+                "to_address": "0xba12222222228d8ba445958a75a0704d566bf2c8",
+                "raw_amount": "433410975363818"
+              },
+              {
+                "tx_hash": "0xcd474a3f5b5e3995dc1c2c0c6d63ce14787cea8c1203af11c7170a7d62985da4",
+                "log_index": 139,
+                "contract": "0xae78736cd615f374d3085123a210448e74fc6393",
+                "from_address": "0xba12222222228d8ba445958a75a0704d566bf2c8",
+                "to_address": "0x47eaaca9819460771db6881165e10e5a26e41155",
+                "raw_amount": "381986670507558"
+              }
+            ],
+            "count": 2
+          },
+          "observed": {
+            "block_number": 22431084,
+            "address": "0xba12222222228d8ba445958a75a0704d566bf2c8",
+            "pinned_block_hash": "0x50c8cab760b2948349c590461b166773c45d8f4858cccf5a43025ab2960152e8",
+            "attempted": true,
+            "started_at": null,
+            "stage": "complete",
+            "error_kind": null,
+            "error": null,
+            "chain_id": 1,
+            "block_hash": "0x50c8cab760b2948349c590461b166773c45d8f4858cccf5a43025ab2960152e8",
+            "count": 2,
+            "rows": [
+              {
+                "tx_hash": "0xcd474a3f5b5e3995dc1c2c0c6d63ce14787cea8c1203af11c7170a7d62985da4",
+                "log_index": 138,
+                "contract": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+                "from_address": "0x16d5a408e807db8ef7c578279beeee6b228f1c1c",
+                "to_address": "0xba12222222228d8ba445958a75a0704d566bf2c8",
+                "raw_amount": "433410975363818"
+              },
+              {
+                "tx_hash": "0xcd474a3f5b5e3995dc1c2c0c6d63ce14787cea8c1203af11c7170a7d62985da4",
+                "log_index": 139,
+                "contract": "0xae78736cd615f374d3085123a210448e74fc6393",
+                "from_address": "0xba12222222228d8ba445958a75a0704d566bf2c8",
+                "to_address": "0x47eaaca9819460771db6881165e10e5a26e41155",
+                "raw_amount": "381986670507558"
+              }
+            ],
+            "witness": {
+              "finalized_height": 22431084,
+              "requested_block_number": 22431084,
+              "end_block_number": 22431084,
+              "end_block_hash": "0x50c8cab760b2948349c590461b166773c45d8f4858cccf5a43025ab2960152e8",
+              "filter_counts": {
+                "sender": 1,
+                "recipient": 1
+              },
+              "filter_rows": {
+                "sender": [
+                  {
+                    "tx_hash": "0xcd474a3f5b5e3995dc1c2c0c6d63ce14787cea8c1203af11c7170a7d62985da4",
+                    "log_index": 139,
+                    "contract": "0xae78736cd615f374d3085123a210448e74fc6393",
+                    "from_address": "0xba12222222228d8ba445958a75a0704d566bf2c8",
+                    "to_address": "0x47eaaca9819460771db6881165e10e5a26e41155",
+                    "raw_amount": "381986670507558"
+                  }
+                ],
+                "recipient": [
+                  {
+                    "tx_hash": "0xcd474a3f5b5e3995dc1c2c0c6d63ce14787cea8c1203af11c7170a7d62985da4",
+                    "log_index": 138,
+                    "contract": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+                    "from_address": "0x16d5a408e807db8ef7c578279beeee6b228f1c1c",
+                    "to_address": "0xba12222222228d8ba445958a75a0704d566bf2c8",
+                    "raw_amount": "433410975363818"
+                  }
+                ]
+              },
+              "receipts": [
+                {
+                  "tx_hash": "0xcd474a3f5b5e3995dc1c2c0c6d63ce14787cea8c1203af11c7170a7d62985da4",
+                  "returned_tx_hash": "0xcd474a3f5b5e3995dc1c2c0c6d63ce14787cea8c1203af11c7170a7d62985da4",
+                  "block_number": 22431084,
+                  "block_hash": "0x50c8cab760b2948349c590461b166773c45d8f4858cccf5a43025ab2960152e8",
+                  "status": 1,
+                  "log_count": 30,
+                  "rows": [
+                    {
+                      "tx_hash": "0xcd474a3f5b5e3995dc1c2c0c6d63ce14787cea8c1203af11c7170a7d62985da4",
+                      "log_index": 138,
+                      "contract": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+                      "from_address": "0x16d5a408e807db8ef7c578279beeee6b228f1c1c",
+                      "to_address": "0xba12222222228d8ba445958a75a0704d566bf2c8",
+                      "raw_amount": "433410975363818"
+                    },
+                    {
+                      "tx_hash": "0xcd474a3f5b5e3995dc1c2c0c6d63ce14787cea8c1203af11c7170a7d62985da4",
+                      "log_index": 139,
+                      "contract": "0xae78736cd615f374d3085123a210448e74fc6393",
+                      "from_address": "0xba12222222228d8ba445958a75a0704d566bf2c8",
+                      "to_address": "0x47eaaca9819460771db6881165e10e5a26e41155",
+                      "raw_amount": "381986670507558"
+                    }
+                  ]
+                }
+              ],
+              "filter_excluded": {
+                "sender": [],
+                "recipient": []
+              }
+            }
+          },
+          "decision": "matched",
+          "issues": [],
+          "diff": {
+            "block_hash_changed": false,
+            "missing": [],
+            "extra": [],
+            "changed": []
+          }
+        },
+        {
+          "block_number": 17034870,
+          "archive": {
+            "path": "tests/mainnet/history/block_data/block-data-17034870.yaml",
+            "sha256": "393c0eb2f909906dc64bcc0bd492265fdf8e0450add350c67f6483c6b9a73185",
+            "fixture_sha256": "caea649d9cc993ed81974c9df9475b61fdba0154556ebc11ae5cd34b981dc029"
+          },
+          "coverage": {
+            "receipts": 184,
+            "logs": 510,
+            "receipts_examined": 184,
+            "logs_examined": 510,
+            "complete": true
+          },
+          "expected": {
+            "block_hash": "0xe22c56f211f03baadcc91e4eb9a24344e6848c5df4473988f893b58223f5216c",
+            "rows": [
+              {
+                "tx_hash": "0xc6a609d5bfc2ace7794244a2e23032269d2f41177aebdd234e5a6df7ea950df9",
+                "log_index": 405,
+                "contract": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+                "from_address": "0x16d5a408e807db8ef7c578279beeee6b228f1c1c",
+                "to_address": "0xba12222222228d8ba445958a75a0704d566bf2c8",
+                "raw_amount": "91000000000000000"
+              },
+              {
+                "tx_hash": "0xc6a609d5bfc2ace7794244a2e23032269d2f41177aebdd234e5a6df7ea950df9",
+                "log_index": 406,
+                "contract": "0xae78736cd615f374d3085123a210448e74fc6393",
+                "from_address": "0xba12222222228d8ba445958a75a0704d566bf2c8",
+                "to_address": "0xf1cb05330f24ac26e267083363ec6d3abf8633b9",
+                "raw_amount": "85250402043920592"
+              }
+            ],
+            "count": 2
+          },
+          "observed": {
+            "block_number": 17034870,
+            "address": "0xba12222222228d8ba445958a75a0704d566bf2c8",
+            "pinned_block_hash": "0xe22c56f211f03baadcc91e4eb9a24344e6848c5df4473988f893b58223f5216c",
+            "attempted": true,
+            "started_at": null,
+            "stage": "complete",
+            "error_kind": null,
+            "error": null,
+            "chain_id": 1,
+            "block_hash": "0xe22c56f211f03baadcc91e4eb9a24344e6848c5df4473988f893b58223f5216c",
+            "count": 2,
+            "rows": [
+              {
+                "tx_hash": "0xc6a609d5bfc2ace7794244a2e23032269d2f41177aebdd234e5a6df7ea950df9",
+                "log_index": 405,
+                "contract": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+                "from_address": "0x16d5a408e807db8ef7c578279beeee6b228f1c1c",
+                "to_address": "0xba12222222228d8ba445958a75a0704d566bf2c8",
+                "raw_amount": "91000000000000000"
+              },
+              {
+                "tx_hash": "0xc6a609d5bfc2ace7794244a2e23032269d2f41177aebdd234e5a6df7ea950df9",
+                "log_index": 406,
+                "contract": "0xae78736cd615f374d3085123a210448e74fc6393",
+                "from_address": "0xba12222222228d8ba445958a75a0704d566bf2c8",
+                "to_address": "0xf1cb05330f24ac26e267083363ec6d3abf8633b9",
+                "raw_amount": "85250402043920592"
+              }
+            ],
+            "witness": {
+              "finalized_height": 17034870,
+              "requested_block_number": 17034870,
+              "end_block_number": 17034870,
+              "end_block_hash": "0xe22c56f211f03baadcc91e4eb9a24344e6848c5df4473988f893b58223f5216c",
+              "filter_counts": {
+                "sender": 1,
+                "recipient": 1
+              },
+              "filter_rows": {
+                "sender": [
+                  {
+                    "tx_hash": "0xc6a609d5bfc2ace7794244a2e23032269d2f41177aebdd234e5a6df7ea950df9",
+                    "log_index": 406,
+                    "contract": "0xae78736cd615f374d3085123a210448e74fc6393",
+                    "from_address": "0xba12222222228d8ba445958a75a0704d566bf2c8",
+                    "to_address": "0xf1cb05330f24ac26e267083363ec6d3abf8633b9",
+                    "raw_amount": "85250402043920592"
+                  }
+                ],
+                "recipient": [
+                  {
+                    "tx_hash": "0xc6a609d5bfc2ace7794244a2e23032269d2f41177aebdd234e5a6df7ea950df9",
+                    "log_index": 405,
+                    "contract": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+                    "from_address": "0x16d5a408e807db8ef7c578279beeee6b228f1c1c",
+                    "to_address": "0xba12222222228d8ba445958a75a0704d566bf2c8",
+                    "raw_amount": "91000000000000000"
+                  }
+                ]
+              },
+              "receipts": [
+                {
+                  "tx_hash": "0xc6a609d5bfc2ace7794244a2e23032269d2f41177aebdd234e5a6df7ea950df9",
+                  "returned_tx_hash": "0xc6a609d5bfc2ace7794244a2e23032269d2f41177aebdd234e5a6df7ea950df9",
+                  "block_number": 17034870,
+                  "block_hash": "0xe22c56f211f03baadcc91e4eb9a24344e6848c5df4473988f893b58223f5216c",
+                  "status": 1,
+                  "log_count": 5,
+                  "rows": [
+                    {
+                      "tx_hash": "0xc6a609d5bfc2ace7794244a2e23032269d2f41177aebdd234e5a6df7ea950df9",
+                      "log_index": 405,
+                      "contract": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+                      "from_address": "0x16d5a408e807db8ef7c578279beeee6b228f1c1c",
+                      "to_address": "0xba12222222228d8ba445958a75a0704d566bf2c8",
+                      "raw_amount": "91000000000000000"
+                    },
+                    {
+                      "tx_hash": "0xc6a609d5bfc2ace7794244a2e23032269d2f41177aebdd234e5a6df7ea950df9",
+                      "log_index": 406,
+                      "contract": "0xae78736cd615f374d3085123a210448e74fc6393",
+                      "from_address": "0xba12222222228d8ba445958a75a0704d566bf2c8",
+                      "to_address": "0xf1cb05330f24ac26e267083363ec6d3abf8633b9",
+                      "raw_amount": "85250402043920592"
+                    }
+                  ]
+                }
+              ],
+              "filter_excluded": {
+                "sender": [],
+                "recipient": []
+              }
+            }
+          },
+          "decision": "matched",
+          "issues": [],
+          "diff": {
+            "block_hash_changed": false,
+            "missing": [],
+            "extra": [],
+            "changed": []
+          }
+        },
+        {
+          "block_number": 17034869,
+          "archive": {
+            "path": "tests/mainnet/history/block_data/block-data-17034869.yaml",
+            "sha256": "0df98aff47b6dd38e13bb548eed51bd8706359e46ea70417ed83f3dffb9701a8",
+            "fixture_sha256": "25bf4cec4850e7ad9f46339de1fa3199bc2901b85aafa64696d8c69c89b387ca"
+          },
+          "coverage": {
+            "receipts": 93,
+            "logs": 208,
+            "receipts_examined": 93,
+            "logs_examined": 208,
+            "complete": true
+          },
+          "expected": {
+            "block_hash": "0xc2558f8143d5f5acb8382b8cb2b8e2f1a10c8bdfeededad850eaca048ed85d8f",
+            "rows": [],
+            "count": 0
+          },
+          "observed": {
+            "block_number": 17034869,
+            "address": "0xba12222222228d8ba445958a75a0704d566bf2c8",
+            "pinned_block_hash": "0xc2558f8143d5f5acb8382b8cb2b8e2f1a10c8bdfeededad850eaca048ed85d8f",
+            "attempted": true,
+            "started_at": null,
+            "stage": "complete",
+            "error_kind": null,
+            "error": null,
+            "chain_id": 1,
+            "block_hash": "0xc2558f8143d5f5acb8382b8cb2b8e2f1a10c8bdfeededad850eaca048ed85d8f",
+            "count": 0,
+            "rows": [],
+            "witness": {
+              "finalized_height": 17034869,
+              "requested_block_number": 17034869,
+              "end_block_number": 17034869,
+              "end_block_hash": "0xc2558f8143d5f5acb8382b8cb2b8e2f1a10c8bdfeededad850eaca048ed85d8f",
+              "filter_counts": {
+                "sender": 0,
+                "recipient": 0
+              },
+              "filter_rows": {
+                "sender": [],
+                "recipient": []
+              },
+              "receipts": [],
+              "filter_excluded": {
+                "sender": [],
+                "recipient": []
+              }
+            }
+          },
+          "decision": "verified_zero",
+          "issues": [],
+          "diff": {
+            "block_hash_changed": false,
+            "missing": [],
+            "extra": [],
+            "changed": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "publicnode",
+      "label": "Allnodes PublicNode",
+      "kind": "public_capture",
+      "description": "Dated public RPC capture. Each window retains its attempt, stage and returned evidence.",
+      "captured_at": "2026-11-20T08:17:54+00:00",
+      "endpoint": "https://ethereum-rpc.publicnode.com",
+      "blocks": [
+        {
+          "block_number": 22431084,
+          "archive": {
+            "path": "tests/mainnet/history/block_data/block-data-22431084.yaml",
+            "sha256": "1d2bc4903770dacaddbe8c1d4c0462190c6ca88c107505c930b357ef5e8b265b",
+            "fixture_sha256": "20e4ff150e212354380748886d51cc6b44eaff9d4232ec379a34f98ab0ca108d"
+          },
+          "coverage": {
+            "receipts": 95,
+            "logs": 233,
+            "receipts_examined": 95,
+            "logs_examined": 233,
+            "complete": true
+          },
+          "expected": {
+            "block_hash": "0x50c8cab760b2948349c590461b166773c45d8f4858cccf5a43025ab2960152e8",
+            "rows": [
+              {
+                "tx_hash": "0xcd474a3f5b5e3995dc1c2c0c6d63ce14787cea8c1203af11c7170a7d62985da4",
+                "log_index": 138,
+                "contract": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+                "from_address": "0x16d5a408e807db8ef7c578279beeee6b228f1c1c",
+                "to_address": "0xba12222222228d8ba445958a75a0704d566bf2c8",
+                "raw_amount": "433410975363818"
+              },
+              {
+                "tx_hash": "0xcd474a3f5b5e3995dc1c2c0c6d63ce14787cea8c1203af11c7170a7d62985da4",
+                "log_index": 139,
+                "contract": "0xae78736cd615f374d3085123a210448e74fc6393",
+                "from_address": "0xba12222222228d8ba445958a75a0704d566bf2c8",
+                "to_address": "0x47eaaca9819460771db6881165e10e5a26e41155",
+                "raw_amount": "381986670507558"
+              }
+            ],
+            "count": 2
+          },
+          "observed": {
+            "block_number": 22431084,
+            "address": "0xba12222222228d8ba445958a75a0704d566bf2c8",
+            "pinned_block_hash": "0x50c8cab760b2948349c590461b166773c45d8f4858cccf5a43025ab2960152e8",
+            "attempted": true,
+            "started_at": "2026-11-20T08:17:48+00:00",
+            "stage": "chain_id",
+            "error_kind": "transport",
+            "error": "RPC provider unavailable or returned unreadable data.",
+            "chain_id": null,
+            "block_hash": null,
+            "count": null,
+            "rows": null,
+            "witness": {
+              "finalized_height": null,
+              "requested_block_number": null,
+              "end_block_number": null,
+              "end_block_hash": null,
+              "filter_counts": {
+                "sender": null,
+                "recipient": null
+              },
+              "filter_rows": {
+                "sender": null,
+                "recipient": null
+              },
+              "receipts": []
+            }
+          },
+          "decision": "unavailable",
+          "issues": [
+            "RPC provider unavailable or returned unreadable data."
+          ],
+          "diff": {
+            "block_hash_changed": null,
+            "missing": [],
+            "extra": [],
+            "changed": []
+          }
+        },
+        {
+          "block_number": 17034870,
+          "archive": {
+            "path": "tests/mainnet/history/block_data/block-data-17034870.yaml",
+            "sha256": "393c0eb2f909906dc64bcc0bd492265fdf8e0450add350c67f6483c6b9a73185",
+            "fixture_sha256": "caea649d9cc993ed81974c9df9475b61fdba0154556ebc11ae5cd34b981dc029"
+          },
+          "coverage": {
+            "receipts": 184,
+            "logs": 510,
+            "receipts_examined": 184,
+            "logs_examined": 510,
+            "complete": true
+          },
+          "expected": {
+            "block_hash": "0xe22c56f211f03baadcc91e4eb9a24344e6848c5df4473988f893b58223f5216c",
+            "rows": [
+              {
+                "tx_hash": "0xc6a609d5bfc2ace7794244a2e23032269d2f41177aebdd234e5a6df7ea950df9",
+                "log_index": 405,
+                "contract": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+                "from_address": "0x16d5a408e807db8ef7c578279beeee6b228f1c1c",
+                "to_address": "0xba12222222228d8ba445958a75a0704d566bf2c8",
+                "raw_amount": "91000000000000000"
+              },
+              {
+                "tx_hash": "0xc6a609d5bfc2ace7794244a2e23032269d2f41177aebdd234e5a6df7ea950df9",
+                "log_index": 406,
+                "contract": "0xae78736cd615f374d3085123a210448e74fc6393",
+                "from_address": "0xba12222222228d8ba445958a75a0704d566bf2c8",
+                "to_address": "0xf1cb05330f24ac26e267083363ec6d3abf8633b9",
+                "raw_amount": "85250402043920592"
+              }
+            ],
+            "count": 2
+          },
+          "observed": {
+            "block_number": 17034870,
+            "address": "0xba12222222228d8ba445958a75a0704d566bf2c8",
+            "pinned_block_hash": "0xe22c56f211f03baadcc91e4eb9a24344e6848c5df4473988f893b58223f5216c",
+            "attempted": false,
+            "started_at": null,
+            "stage": "not_run",
+            "error_kind": "not_run",
+            "error": "Skipped after this provider's transport failed during preflight.",
+            "chain_id": null,
+            "block_hash": null,
+            "count": null,
+            "rows": null,
+            "witness": {
+              "finalized_height": null,
+              "requested_block_number": null,
+              "end_block_number": null,
+              "end_block_hash": null,
+              "filter_counts": {
+                "sender": null,
+                "recipient": null
+              },
+              "filter_rows": {
+                "sender": null,
+                "recipient": null
+              },
+              "receipts": []
+            }
+          },
+          "decision": "unavailable",
+          "issues": [
+            "Skipped after this provider's transport failed during preflight."
+          ],
+          "diff": {
+            "block_hash_changed": null,
+            "missing": [],
+            "extra": [],
+            "changed": []
+          }
+        },
+        {
+          "block_number": 17034869,
+          "archive": {
+            "path": "tests/mainnet/history/block_data/block-data-17034869.yaml",
+            "sha256": "0df98aff47b6dd38e13bb548eed51bd8706359e46ea70417ed83f3dffb9701a8",
+            "fixture_sha256": "25bf4cec4850e7ad9f46339de1fa3199bc2901b85aafa64696d8c69c89b387ca"
+          },
+          "coverage": {
+            "receipts": 93,
+            "logs": 208,
+            "receipts_examined": 93,
+            "logs_examined": 208,
+            "complete": true
+          },
+          "expected": {
+            "block_hash": "0xc2558f8143d5f5acb8382b8cb2b8e2f1a10c8bdfeededad850eaca048ed85d8f",
+            "rows": [],
+            "count": 0
+          },
+          "observed": {
+            "block_number": 17034869,
+            "address": "0xba12222222228d8ba445958a75a0704d566bf2c8",
+            "pinned_block_hash": "0xc2558f8143d5f5acb8382b8cb2b8e2f1a10c8bdfeededad850eaca048ed85d8f",
+            "attempted": false,
+            "started_at": null,
+            "stage": "not_run",
+            "error_kind": "not_run",
+            "error": "Skipped after this provider's transport failed during preflight.",
+            "chain_id": null,
+            "block_hash": null,
+            "count": null,
+            "rows": null,
+            "witness": {
+              "finalized_height": null,
+              "requested_block_number": null,
+              "end_block_number": null,
+              "end_block_hash": null,
+              "filter_counts": {
+                "sender": null,
+                "recipient": null
+              },
+              "filter_rows": {
+                "sender": null,
+                "recipient": null
+              },
+              "receipts": []
+            }
+          },
+          "decision": "unavailable",
+          "issues": [
+            "Skipped after this provider's transport failed during preflight."
+          ],
+          "diff": {
+            "block_hash_changed": null,
+            "missing": [],
+            "extra": [],
+            "changed": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "1rpc",
+      "label": "Automata 1RPC",
+      "kind": "public_capture",
+      "description": "Dated public RPC capture. Each window retains its attempt, stage and returned evidence.",
+      "captured_at": "2026-11-20T08:17:54+00:00",
+      "endpoint": "https://public.1rpc.io/eth",
+      "blocks": [
+        {
+          "block_number": 22431084,
+          "archive": {
+            "path": "tests/mainnet/history/block_data/block-data-22431084.yaml",
+            "sha256": "1d2bc4903770dacaddbe8c1d4c0462190c6ca88c107505c930b357ef5e8b265b",
+            "fixture_sha256": "20e4ff150e212354380748886d51cc6b44eaff9d4232ec379a34f98ab0ca108d"
+          },
+          "coverage": {
+            "receipts": 95,
+            "logs": 233,
+            "receipts_examined": 95,
+            "logs_examined": 233,
+            "complete": true
+          },
+          "expected": {
+            "block_hash": "0x50c8cab760b2948349c590461b166773c45d8f4858cccf5a43025ab2960152e8",
+            "rows": [
+              {
+                "tx_hash": "0xcd474a3f5b5e3995dc1c2c0c6d63ce14787cea8c1203af11c7170a7d62985da4",
+                "log_index": 138,
+                "contract": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+                "from_address": "0x16d5a408e807db8ef7c578279beeee6b228f1c1c",
+                "to_address": "0xba12222222228d8ba445958a75a0704d566bf2c8",
+                "raw_amount": "433410975363818"
+              },
+              {
+                "tx_hash": "0xcd474a3f5b5e3995dc1c2c0c6d63ce14787cea8c1203af11c7170a7d62985da4",
+                "log_index": 139,
+                "contract": "0xae78736cd615f374d3085123a210448e74fc6393",
+                "from_address": "0xba12222222228d8ba445958a75a0704d566bf2c8",
+                "to_address": "0x47eaaca9819460771db6881165e10e5a26e41155",
+                "raw_amount": "381986670507558"
+              }
+            ],
+            "count": 2
+          },
+          "observed": {
+            "block_number": 22431084,
+            "address": "0xba12222222228d8ba445958a75a0704d566bf2c8",
+            "pinned_block_hash": "0x50c8cab760b2948349c590461b166773c45d8f4858cccf5a43025ab2960152e8",
+            "attempted": true,
+            "started_at": "2026-11-20T08:17:53+00:00",
+            "stage": "chain_id",
+            "error_kind": "transport",
+            "error": "RPC provider unavailable or returned unreadable data.",
+            "chain_id": null,
+            "block_hash": null,
+            "count": null,
+            "rows": null,
+            "witness": {
+              "finalized_height": null,
+              "requested_block_number": null,
+              "end_block_number": null,
+              "end_block_hash": null,
+              "filter_counts": {
+                "sender": null,
+                "recipient": null
+              },
+              "filter_rows": {
+                "sender": null,
+                "recipient": null
+              },
+              "receipts": []
+            }
+          },
+          "decision": "unavailable",
+          "issues": [
+            "RPC provider unavailable or returned unreadable data."
+          ],
+          "diff": {
+            "block_hash_changed": null,
+            "missing": [],
+            "extra": [],
+            "changed": []
+          }
+        },
+        {
+          "block_number": 17034870,
+          "archive": {
+            "path": "tests/mainnet/history/block_data/block-data-17034870.yaml",
+            "sha256": "393c0eb2f909906dc64bcc0bd492265fdf8e0450add350c67f6483c6b9a73185",
+            "fixture_sha256": "caea649d9cc993ed81974c9df9475b61fdba0154556ebc11ae5cd34b981dc029"
+          },
+          "coverage": {
+            "receipts": 184,
+            "logs": 510,
+            "receipts_examined": 184,
+            "logs_examined": 510,
+            "complete": true
+          },
+          "expected": {
+            "block_hash": "0xe22c56f211f03baadcc91e4eb9a24344e6848c5df4473988f893b58223f5216c",
+            "rows": [
+              {
+                "tx_hash": "0xc6a609d5bfc2ace7794244a2e23032269d2f41177aebdd234e5a6df7ea950df9",
+                "log_index": 405,
+                "contract": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+                "from_address": "0x16d5a408e807db8ef7c578279beeee6b228f1c1c",
+                "to_address": "0xba12222222228d8ba445958a75a0704d566bf2c8",
+                "raw_amount": "91000000000000000"
+              },
+              {
+                "tx_hash": "0xc6a609d5bfc2ace7794244a2e23032269d2f41177aebdd234e5a6df7ea950df9",
+                "log_index": 406,
+                "contract": "0xae78736cd615f374d3085123a210448e74fc6393",
+                "from_address": "0xba12222222228d8ba445958a75a0704d566bf2c8",
+                "to_address": "0xf1cb05330f24ac26e267083363ec6d3abf8633b9",
+                "raw_amount": "85250402043920592"
+              }
+            ],
+            "count": 2
+          },
+          "observed": {
+            "block_number": 17034870,
+            "address": "0xba12222222228d8ba445958a75a0704d566bf2c8",
+            "pinned_block_hash": "0xe22c56f211f03baadcc91e4eb9a24344e6848c5df4473988f893b58223f5216c",
+            "attempted": false,
+            "started_at": null,
+            "stage": "not_run",
+            "error_kind": "not_run",
+            "error": "Skipped after this provider's transport failed during preflight.",
+            "chain_id": null,
+            "block_hash": null,
+            "count": null,
+            "rows": null,
+            "witness": {
+              "finalized_height": null,
+              "requested_block_number": null,
+              "end_block_number": null,
+              "end_block_hash": null,
+              "filter_counts": {
+                "sender": null,
+                "recipient": null
+              },
+              "filter_rows": {
+                "sender": null,
+                "recipient": null
+              },
+              "receipts": []
+            }
+          },
+          "decision": "unavailable",
+          "issues": [
+            "Skipped after this provider's transport failed during preflight."
+          ],
+          "diff": {
+            "block_hash_changed": null,
+            "missing": [],
+            "extra": [],
+            "changed": []
+          }
+        },
+        {
+          "block_number": 17034869,
+          "archive": {
+            "path": "tests/mainnet/history/block_data/block-data-17034869.yaml",
+            "sha256": "0df98aff47b6dd38e13bb548eed51bd8706359e46ea70417ed83f3dffb9701a8",
+            "fixture_sha256": "25bf4cec4850e7ad9f46339de1fa3199bc2901b85aafa64696d8c69c89b387ca"
+          },
+          "coverage": {
+            "receipts": 93,
+            "logs": 208,
+            "receipts_examined": 93,
+            "logs_examined": 208,
+            "complete": true
+          },
+          "expected": {
+            "block_hash": "0xc2558f8143d5f5acb8382b8cb2b8e2f1a10c8bdfeededad850eaca048ed85d8f",
+            "rows": [],
+            "count": 0
+          },
+          "observed": {
+            "block_number": 17034869,
+            "address": "0xba12222222228d8ba445958a75a0704d566bf2c8",
+            "pinned_block_hash": "0xc2558f8143d5f5acb8382b8cb2b8e2f1a10c8bdfeededad850eaca048ed85d8f",
+            "attempted": false,
+            "started_at": null,
+            "stage": "not_run",
+            "error_kind": "not_run",
+            "error": "Skipped after this provider's transport failed during preflight.",
+            "chain_id": null,
+            "block_hash": null,
+            "count": null,
+            "rows": null,
+            "witness": {
+              "finalized_height": null,
+              "requested_block_number": null,
+              "end_block_number": null,
+              "end_block_hash": null,
+              "filter_counts": {
+                "sender": null,
+                "recipient": null
+              },
+              "filter_rows": {
+                "sender": null,
+                "recipient": null
+              },
+              "receipts": []
+            }
+          },
+          "decision": "unavailable",
+          "issues": [
+            "Skipped after this provider's transport failed during preflight."
+          ],
+          "diff": {
+            "block_hash_changed": null,
+            "missing": [],
+            "extra": [],
+            "changed": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "diagnostic",
+      "label": "Constructed diagnostic examples",
+      "kind": "diagnostic",
+      "description": "Fixture edits demonstrate a changed amount, a moved log index and a missing recipient filter.",
+      "captured_at": null,
+      "endpoint": null,
+      "blocks": [
+        {
+          "block_number": 22431084,
+          "archive": {
+            "path": "tests/mainnet/history/block_data/block-data-22431084.yaml",
+            "sha256": "1d2bc4903770dacaddbe8c1d4c0462190c6ca88c107505c930b357ef5e8b265b",
+            "fixture_sha256": "20e4ff150e212354380748886d51cc6b44eaff9d4232ec379a34f98ab0ca108d"
+          },
+          "coverage": {
+            "receipts": 95,
+            "logs": 233,
+            "receipts_examined": 95,
+            "logs_examined": 233,
+            "complete": true
+          },
+          "expected": {
+            "block_hash": "0x50c8cab760b2948349c590461b166773c45d8f4858cccf5a43025ab2960152e8",
+            "rows": [
+              {
+                "tx_hash": "0xcd474a3f5b5e3995dc1c2c0c6d63ce14787cea8c1203af11c7170a7d62985da4",
+                "log_index": 138,
+                "contract": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+                "from_address": "0x16d5a408e807db8ef7c578279beeee6b228f1c1c",
+                "to_address": "0xba12222222228d8ba445958a75a0704d566bf2c8",
+                "raw_amount": "433410975363818"
+              },
+              {
+                "tx_hash": "0xcd474a3f5b5e3995dc1c2c0c6d63ce14787cea8c1203af11c7170a7d62985da4",
+                "log_index": 139,
+                "contract": "0xae78736cd615f374d3085123a210448e74fc6393",
+                "from_address": "0xba12222222228d8ba445958a75a0704d566bf2c8",
+                "to_address": "0x47eaaca9819460771db6881165e10e5a26e41155",
+                "raw_amount": "381986670507558"
+              }
+            ],
+            "count": 2
+          },
+          "observed": {
+            "block_number": 22431084,
+            "address": "0xba12222222228d8ba445958a75a0704d566bf2c8",
+            "pinned_block_hash": "0x50c8cab760b2948349c590461b166773c45d8f4858cccf5a43025ab2960152e8",
+            "attempted": true,
+            "started_at": null,
+            "stage": "complete",
+            "error_kind": null,
+            "error": null,
+            "chain_id": 1,
+            "block_hash": "0x50c8cab760b2948349c590461b166773c45d8f4858cccf5a43025ab2960152e8",
+            "count": 2,
+            "rows": [
+              {
+                "tx_hash": "0xcd474a3f5b5e3995dc1c2c0c6d63ce14787cea8c1203af11c7170a7d62985da4",
+                "log_index": 138,
+                "contract": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+                "from_address": "0x16d5a408e807db8ef7c578279beeee6b228f1c1c",
+                "to_address": "0xba12222222228d8ba445958a75a0704d566bf2c8",
+                "raw_amount": "433410975363819"
+              },
+              {
+                "tx_hash": "0xcd474a3f5b5e3995dc1c2c0c6d63ce14787cea8c1203af11c7170a7d62985da4",
+                "log_index": 139,
+                "contract": "0xae78736cd615f374d3085123a210448e74fc6393",
+                "from_address": "0xba12222222228d8ba445958a75a0704d566bf2c8",
+                "to_address": "0x47eaaca9819460771db6881165e10e5a26e41155",
+                "raw_amount": "381986670507558"
+              }
+            ],
+            "witness": {
+              "finalized_height": 22431084,
+              "requested_block_number": 22431084,
+              "end_block_number": 22431084,
+              "end_block_hash": "0x50c8cab760b2948349c590461b166773c45d8f4858cccf5a43025ab2960152e8",
+              "filter_counts": {
+                "sender": 1,
+                "recipient": 1
+              },
+              "filter_rows": {
+                "sender": [
+                  {
+                    "tx_hash": "0xcd474a3f5b5e3995dc1c2c0c6d63ce14787cea8c1203af11c7170a7d62985da4",
+                    "log_index": 139,
+                    "contract": "0xae78736cd615f374d3085123a210448e74fc6393",
+                    "from_address": "0xba12222222228d8ba445958a75a0704d566bf2c8",
+                    "to_address": "0x47eaaca9819460771db6881165e10e5a26e41155",
+                    "raw_amount": "381986670507558"
+                  }
+                ],
+                "recipient": [
+                  {
+                    "tx_hash": "0xcd474a3f5b5e3995dc1c2c0c6d63ce14787cea8c1203af11c7170a7d62985da4",
+                    "log_index": 138,
+                    "contract": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+                    "from_address": "0x16d5a408e807db8ef7c578279beeee6b228f1c1c",
+                    "to_address": "0xba12222222228d8ba445958a75a0704d566bf2c8",
+                    "raw_amount": "433410975363819"
+                  }
+                ]
+              },
+              "receipts": [
+                {
+                  "tx_hash": "0xcd474a3f5b5e3995dc1c2c0c6d63ce14787cea8c1203af11c7170a7d62985da4",
+                  "returned_tx_hash": "0xcd474a3f5b5e3995dc1c2c0c6d63ce14787cea8c1203af11c7170a7d62985da4",
+                  "block_number": 22431084,
+                  "block_hash": "0x50c8cab760b2948349c590461b166773c45d8f4858cccf5a43025ab2960152e8",
+                  "status": 1,
+                  "log_count": 30,
+                  "rows": [
+                    {
+                      "tx_hash": "0xcd474a3f5b5e3995dc1c2c0c6d63ce14787cea8c1203af11c7170a7d62985da4",
+                      "log_index": 138,
+                      "contract": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+                      "from_address": "0x16d5a408e807db8ef7c578279beeee6b228f1c1c",
+                      "to_address": "0xba12222222228d8ba445958a75a0704d566bf2c8",
+                      "raw_amount": "433410975363819"
+                    },
+                    {
+                      "tx_hash": "0xcd474a3f5b5e3995dc1c2c0c6d63ce14787cea8c1203af11c7170a7d62985da4",
+                      "log_index": 139,
+                      "contract": "0xae78736cd615f374d3085123a210448e74fc6393",
+                      "from_address": "0xba12222222228d8ba445958a75a0704d566bf2c8",
+                      "to_address": "0x47eaaca9819460771db6881165e10e5a26e41155",
+                      "raw_amount": "381986670507558"
+                    }
+                  ]
+                }
+              ],
+              "filter_excluded": {
+                "sender": [],
+                "recipient": []
+              }
+            }
+          },
+          "decision": "disagreement",
+          "issues": [
+            "Changed block-wide log indices: 138."
+          ],
+          "diff": {
+            "block_hash_changed": false,
+            "missing": [],
+            "extra": [],
+            "changed": [
+              {
+                "log_index": 138,
+                "fields": [
+                  "raw_amount"
+                ],
+                "expected": {
+                  "tx_hash": "0xcd474a3f5b5e3995dc1c2c0c6d63ce14787cea8c1203af11c7170a7d62985da4",
+                  "log_index": 138,
+                  "contract": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+                  "from_address": "0x16d5a408e807db8ef7c578279beeee6b228f1c1c",
+                  "to_address": "0xba12222222228d8ba445958a75a0704d566bf2c8",
+                  "raw_amount": "433410975363818"
+                },
+                "observed": {
+                  "tx_hash": "0xcd474a3f5b5e3995dc1c2c0c6d63ce14787cea8c1203af11c7170a7d62985da4",
+                  "log_index": 138,
+                  "contract": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+                  "from_address": "0x16d5a408e807db8ef7c578279beeee6b228f1c1c",
+                  "to_address": "0xba12222222228d8ba445958a75a0704d566bf2c8",
+                  "raw_amount": "433410975363819"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "block_number": 17034870,
+          "archive": {
+            "path": "tests/mainnet/history/block_data/block-data-17034870.yaml",
+            "sha256": "393c0eb2f909906dc64bcc0bd492265fdf8e0450add350c67f6483c6b9a73185",
+            "fixture_sha256": "caea649d9cc993ed81974c9df9475b61fdba0154556ebc11ae5cd34b981dc029"
+          },
+          "coverage": {
+            "receipts": 184,
+            "logs": 510,
+            "receipts_examined": 184,
+            "logs_examined": 510,
+            "complete": true
+          },
+          "expected": {
+            "block_hash": "0xe22c56f211f03baadcc91e4eb9a24344e6848c5df4473988f893b58223f5216c",
+            "rows": [
+              {
+                "tx_hash": "0xc6a609d5bfc2ace7794244a2e23032269d2f41177aebdd234e5a6df7ea950df9",
+                "log_index": 405,
+                "contract": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+                "from_address": "0x16d5a408e807db8ef7c578279beeee6b228f1c1c",
+                "to_address": "0xba12222222228d8ba445958a75a0704d566bf2c8",
+                "raw_amount": "91000000000000000"
+              },
+              {
+                "tx_hash": "0xc6a609d5bfc2ace7794244a2e23032269d2f41177aebdd234e5a6df7ea950df9",
+                "log_index": 406,
+                "contract": "0xae78736cd615f374d3085123a210448e74fc6393",
+                "from_address": "0xba12222222228d8ba445958a75a0704d566bf2c8",
+                "to_address": "0xf1cb05330f24ac26e267083363ec6d3abf8633b9",
+                "raw_amount": "85250402043920592"
+              }
+            ],
+            "count": 2
+          },
+          "observed": {
+            "block_number": 17034870,
+            "address": "0xba12222222228d8ba445958a75a0704d566bf2c8",
+            "pinned_block_hash": "0xe22c56f211f03baadcc91e4eb9a24344e6848c5df4473988f893b58223f5216c",
+            "attempted": true,
+            "started_at": null,
+            "stage": "complete",
+            "error_kind": null,
+            "error": null,
+            "chain_id": 1,
+            "block_hash": "0xe22c56f211f03baadcc91e4eb9a24344e6848c5df4473988f893b58223f5216c",
+            "count": 2,
+            "rows": [
+              {
+                "tx_hash": "0xc6a609d5bfc2ace7794244a2e23032269d2f41177aebdd234e5a6df7ea950df9",
+                "log_index": 405,
+                "contract": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+                "from_address": "0x16d5a408e807db8ef7c578279beeee6b228f1c1c",
+                "to_address": "0xba12222222228d8ba445958a75a0704d566bf2c8",
+                "raw_amount": "91000000000000000"
+              },
+              {
+                "tx_hash": "0xc6a609d5bfc2ace7794244a2e23032269d2f41177aebdd234e5a6df7ea950df9",
+                "log_index": 407,
+                "contract": "0xae78736cd615f374d3085123a210448e74fc6393",
+                "from_address": "0xba12222222228d8ba445958a75a0704d566bf2c8",
+                "to_address": "0xf1cb05330f24ac26e267083363ec6d3abf8633b9",
+                "raw_amount": "85250402043920592"
+              }
+            ],
+            "witness": {
+              "finalized_height": 17034870,
+              "requested_block_number": 17034870,
+              "end_block_number": 17034870,
+              "end_block_hash": "0xe22c56f211f03baadcc91e4eb9a24344e6848c5df4473988f893b58223f5216c",
+              "filter_counts": {
+                "sender": 1,
+                "recipient": 1
+              },
+              "filter_rows": {
+                "sender": [
+                  {
+                    "tx_hash": "0xc6a609d5bfc2ace7794244a2e23032269d2f41177aebdd234e5a6df7ea950df9",
+                    "log_index": 407,
+                    "contract": "0xae78736cd615f374d3085123a210448e74fc6393",
+                    "from_address": "0xba12222222228d8ba445958a75a0704d566bf2c8",
+                    "to_address": "0xf1cb05330f24ac26e267083363ec6d3abf8633b9",
+                    "raw_amount": "85250402043920592"
+                  }
+                ],
+                "recipient": [
+                  {
+                    "tx_hash": "0xc6a609d5bfc2ace7794244a2e23032269d2f41177aebdd234e5a6df7ea950df9",
+                    "log_index": 405,
+                    "contract": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+                    "from_address": "0x16d5a408e807db8ef7c578279beeee6b228f1c1c",
+                    "to_address": "0xba12222222228d8ba445958a75a0704d566bf2c8",
+                    "raw_amount": "91000000000000000"
+                  }
+                ]
+              },
+              "receipts": [
+                {
+                  "tx_hash": "0xc6a609d5bfc2ace7794244a2e23032269d2f41177aebdd234e5a6df7ea950df9",
+                  "returned_tx_hash": "0xc6a609d5bfc2ace7794244a2e23032269d2f41177aebdd234e5a6df7ea950df9",
+                  "block_number": 17034870,
+                  "block_hash": "0xe22c56f211f03baadcc91e4eb9a24344e6848c5df4473988f893b58223f5216c",
+                  "status": 1,
+                  "log_count": 5,
+                  "rows": [
+                    {
+                      "tx_hash": "0xc6a609d5bfc2ace7794244a2e23032269d2f41177aebdd234e5a6df7ea950df9",
+                      "log_index": 405,
+                      "contract": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+                      "from_address": "0x16d5a408e807db8ef7c578279beeee6b228f1c1c",
+                      "to_address": "0xba12222222228d8ba445958a75a0704d566bf2c8",
+                      "raw_amount": "91000000000000000"
+                    },
+                    {
+                      "tx_hash": "0xc6a609d5bfc2ace7794244a2e23032269d2f41177aebdd234e5a6df7ea950df9",
+                      "log_index": 407,
+                      "contract": "0xae78736cd615f374d3085123a210448e74fc6393",
+                      "from_address": "0xba12222222228d8ba445958a75a0704d566bf2c8",
+                      "to_address": "0xf1cb05330f24ac26e267083363ec6d3abf8633b9",
+                      "raw_amount": "85250402043920592"
+                    }
+                  ]
+                }
+              ],
+              "filter_excluded": {
+                "sender": [],
+                "recipient": []
+              }
+            }
+          },
+          "decision": "disagreement",
+          "issues": [
+            "Missing block-wide log indices: 406.",
+            "Extra block-wide log indices: 407."
+          ],
+          "diff": {
+            "block_hash_changed": false,
+            "missing": [
+              {
+                "tx_hash": "0xc6a609d5bfc2ace7794244a2e23032269d2f41177aebdd234e5a6df7ea950df9",
+                "log_index": 406,
+                "contract": "0xae78736cd615f374d3085123a210448e74fc6393",
+                "from_address": "0xba12222222228d8ba445958a75a0704d566bf2c8",
+                "to_address": "0xf1cb05330f24ac26e267083363ec6d3abf8633b9",
+                "raw_amount": "85250402043920592"
+              }
+            ],
+            "extra": [
+              {
+                "tx_hash": "0xc6a609d5bfc2ace7794244a2e23032269d2f41177aebdd234e5a6df7ea950df9",
+                "log_index": 407,
+                "contract": "0xae78736cd615f374d3085123a210448e74fc6393",
+                "from_address": "0xba12222222228d8ba445958a75a0704d566bf2c8",
+                "to_address": "0xf1cb05330f24ac26e267083363ec6d3abf8633b9",
+                "raw_amount": "85250402043920592"
+              }
+            ],
+            "changed": []
+          }
+        },
+        {
+          "block_number": 17034869,
+          "archive": {
+            "path": "tests/mainnet/history/block_data/block-data-17034869.yaml",
+            "sha256": "0df98aff47b6dd38e13bb548eed51bd8706359e46ea70417ed83f3dffb9701a8",
+            "fixture_sha256": "25bf4cec4850e7ad9f46339de1fa3199bc2901b85aafa64696d8c69c89b387ca"
+          },
+          "coverage": {
+            "receipts": 93,
+            "logs": 208,
+            "receipts_examined": 93,
+            "logs_examined": 208,
+            "complete": true
+          },
+          "expected": {
+            "block_hash": "0xc2558f8143d5f5acb8382b8cb2b8e2f1a10c8bdfeededad850eaca048ed85d8f",
+            "rows": [],
+            "count": 0
+          },
+          "observed": {
+            "block_number": 17034869,
+            "address": "0xba12222222228d8ba445958a75a0704d566bf2c8",
+            "pinned_block_hash": "0xc2558f8143d5f5acb8382b8cb2b8e2f1a10c8bdfeededad850eaca048ed85d8f",
+            "attempted": true,
+            "started_at": null,
+            "stage": "complete",
+            "error_kind": null,
+            "error": null,
+            "chain_id": 1,
+            "block_hash": "0xc2558f8143d5f5acb8382b8cb2b8e2f1a10c8bdfeededad850eaca048ed85d8f",
+            "count": 0,
+            "rows": [],
+            "witness": {
+              "finalized_height": 17034869,
+              "requested_block_number": 17034869,
+              "end_block_number": 17034869,
+              "end_block_hash": "0xc2558f8143d5f5acb8382b8cb2b8e2f1a10c8bdfeededad850eaca048ed85d8f",
+              "filter_counts": {
+                "sender": 0,
+                "recipient": null
+              },
+              "filter_rows": {
+                "sender": [],
+                "recipient": null
+              },
+              "receipts": [],
+              "filter_excluded": {
+                "sender": [],
+                "recipient": null
+              }
+            }
+          },
+          "decision": "incomplete",
+          "issues": [
+            "Missing or invalid recipient filter count."
+          ],
+          "diff": {
+            "block_hash_changed": null,
+            "missing": [],
+            "extra": [],
+            "changed": []
+          }
+        }
+      ]
+    }
+  ],
+  "sha256": "f0444484fdcdf5a8aadb8179a6d4b069b3f687c3c0ce95d4ec41149494d65a6b"
+}
