@@ -1,5 +1,11 @@
 # Verification log
 
+## Vision v1.3 · Replay comparison
+
+On 20 November 2026, both release jobs checked out implementation commit `5dc1c178da88fe131bf23cb1a6eb1f7d56c75bfb` and passed. The workflow ran 118 offline Python tests, the generated-report check, both JavaScript syntax checks, static export and offline verification, and the loopback Chromium smoke test. [Implementation CI](https://github.com/EauDoon/Vision/actions/runs/44702425122) · [Final PR head checks](https://github.com/EauDoon/Vision/pull/6/checks)
+
+The browser selected sources and blocks, inspected disagreements and the incomplete zero example, and downloaded the full 50,537-byte JSON after further packet requests were blocked. Its bytes matched the displayed JSON, and the canonical SHA-256 was `f0444484fdcdf5a8aadb8179a6d4b069b3f687c3c0ce95d4ec41149494d65a6b`. The v1.2 fixture packet also passed its original verifier. [Comparison results and public capture](V1.3.md#release-observations)
+
 ## Vision v1.2.0 candidate · Balancer Vault
 
 **Fixture-backed reconciliation passed for these three blocks.** On 19 November 2026, the `verify` and `browser` jobs both checked out implementation commit `2b8fd7a8d09302b36299beb829902b2e49e3cb3a`. The input is the pinned archive’s receipt projection served as constructed JSON-RPC responses. [Candidate CI](https://github.com/EauDoon/Vision/actions/runs/44529661598) · [Checks on the current draft PR head](https://github.com/EauDoon/Vision/pull/5/checks)
