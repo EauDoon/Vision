@@ -2,9 +2,21 @@
 
 **An evidence-first workbench for Ethereum.** Search an address or transaction, inspect the transfers behind a label, and export exactly what the local index saw. A separate fictional case shows how verified economic records can be reconciled without guessing who owns a wallet or how much tax they owe.
 
-**v1.2.0 · Python ≥3.10 · SQLite · Single-user research workbench.** The bundled reports run offline with the Python standard library.
+**v1.3.0 · Python ≥3.10 · SQLite · Single-user research workbench.** The bundled reports run offline with the Python standard library.
 
-## Balancer Vault transfer review
+## Compare Balancer Vault replays
+
+Which sources recovered the archived transfers, and what explains each difference? Open the [published replay comparison](https://eaudoon.github.io/Vision/) or start `python3 app.py` and open the [local dashboard](http://127.0.0.1:8765/replay/). Pick a block and source to inspect its rows, block hashes, receipt witnesses and filter coverage. Enable the labeled diagnostic examples to explore a disagreement or an incomplete observation.
+
+The archive and constructed importer replay cover the same three Ethereum mainnet blocks. The public-source entries record the outcome of a dated, bounded read. The dashboard can be used offline with the bundled capture. Check the downloaded reviewer JSON from the repository root.
+
+```sh
+python3 replay_compare.py --verify vision-replay-review.json
+```
+
+For the release evidence and the public capture procedure, see the [v1.3 notes](docs/V1.3.md) and [operations guide](docs/OPERATIONS.md).
+
+## v1.2 Balancer Vault snapshot
 
 Does Vision recover the same ERC-20-shaped transfers as the archived receipts? Run `python3 app.py` and open the [local transfer review](http://127.0.0.1:8765/#transfer-review). Expand a block to inspect its archive evidence and importer rows. The scope is the Balancer Vault on Ethereum mainnet, with one finalized block per comparison. Amounts are raw integers.
 
@@ -20,7 +32,7 @@ The report compares archived facts with Vision’s importer running on construct
 python3 transfer_review.py --verify vision-balancer-vault-review.json
 ```
 
-For a fresh copy from the command line, run `python3 transfer_review.py > vision-balancer-vault-review.json`. The fixture provenance and release checks are documented in the [archive notes](fixtures/balancer-vault/README.md) and [verification record](docs/VERIFICATION.md).
+For a fresh copy from the command line, run `python3 transfer_review.py > vision-balancer-vault-review.json`. The original report and JSON are also available in the [published v1.2 snapshot](https://eaudoon.github.io/Vision/v1.2/). The fixture provenance and release checks are documented in the [archive notes](fixtures/balancer-vault/README.md) and [verification record](docs/VERIFICATION.md).
 
 ## The illustrated report: one sale, two cost lots
 

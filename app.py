@@ -8,16 +8,24 @@ from pathlib import Path
 from urllib.parse import parse_qs, urlsplit
 
 from chain import ChainError, crawl, normalize_address
+import replay_compare
 from reconcile import demo_case, reconcile
 from store import DEMO_ADDRESS, Store, digest, encode
 from transfer_review import build_packet
 
-VERSION = "1.2.0"
+VERSION = "1.3.0"
 STATIC = Path(__file__).resolve().parent / "static"
 FILES = {"/":("index.html","text/html; charset=utf-8"),"/index.html":("index.html","text/html; charset=utf-8"),
          "/static/app.js":("app.js","text/javascript; charset=utf-8"),"/static/style.css":("style.css","text/css; charset=utf-8")}
 for asset, mime in (("report.html", "text/html; charset=utf-8"), ("report.css", "text/css; charset=utf-8"), ("report-figure.svg", "image/svg+xml")):
     FILES["/static/" + asset] = (asset, mime)
+for route, asset, mime in (
+    ("/replay/", "replay/index.html", "text/html; charset=utf-8"),
+    ("/replay/index.html", "replay/index.html", "text/html; charset=utf-8"),
+    ("/replay/review.js", "replay/review.js", "text/javascript; charset=utf-8"),
+    ("/replay/style.css", "replay/style.css", "text/css; charset=utf-8"),
+):
+    FILES[route] = (asset, mime)
 BOUNDARY = "Local research workbench. Public-chain observations and simulated case evidence are separate."
 
 
@@ -29,9 +37,10 @@ class Problem(Exception):
 class VisionServer(ThreadingHTTPServer):
     daemon_threads = True
 
-    def __init__(self, port, store, rpc_url=None, crawler=crawl):
+    def __init__(self, port, store, rpc_url=None, crawler=crawl, *, replay_capture=None):
         self.store, self.rpc_url, self.crawler = store, rpc_url, crawler
         self.crawl_lock = threading.Lock()
+        self.replay_packet = replay_compare.packet_bytes(replay_capture)
         super().__init__(("127.0.0.1",port), Handler)
 
     def case(self):
@@ -105,6 +114,16 @@ class Handler(BaseHTTPRequestHandler):
         if not write and path in FILES:
             name,mime=FILES[path]
             return self.send_data(200,(STATIC/name).read_bytes(),mime)
+        if not write and path == "/replay":
+            self.send_response(308)
+            self.send_header("Location", "/replay/")
+            self.send_header("Content-Length", "0")
+            self.end_headers()
+            return
+        if not write and path in {"/replay/packet.json", "/api/replay-compare"}:
+            if url.query:
+                raise Problem(400, "This comparison uses the bundled replay observations and accepts no parameters.")
+            return self.send_data(200, self.server.replay_packet, "application/json; charset=utf-8")
         db=self.server.store
         if not write and path=="/api/status":
             return self.json(200,dict(name="Vision",version=VERSION,counts=db.status(),
@@ -190,10 +209,17 @@ def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--port",type=int,default=8765)
     parser.add_argument("--db",default=os.getenv("VISION_DB","./data/vision.sqlite3"))
+    parser.add_argument("--replay-capture", type=Path, metavar="FILE",
+                        help="Show this saved provider capture in the replay dashboard.")
     args=parser.parse_args()
     if not 0<=args.port<=65535: parser.error("Port out of range.")
     os.umask(0o077)
-    with VisionServer(args.port,Store(args.db),os.getenv("VISION_RPC_URL")) as server:
+    try:
+        capture = replay_compare.read_json(args.replay_capture) if args.replay_capture else None
+        server = VisionServer(args.port, Store(args.db), os.getenv("VISION_RPC_URL"), replay_capture=capture)
+    except (OSError, ValueError, RecursionError) as exc:
+        parser.exit(1, f"Cannot start Vision: {exc}\n")
+    with server:
         print(f"Vision {VERSION} · http://127.0.0.1:{server.server_port} · Ctrl+C to stop",flush=True)
         try: server.serve_forever()
         except KeyboardInterrupt: pass

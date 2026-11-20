@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="referrer" content="no-referrer">
+  <title>Balancer Vault replay comparison · Vision</title>
+  <link rel="stylesheet" href="./style.css">
+  <script src="./review.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#observations">Skip to comparisons</a>
+  <header class="mast">
+    <div class="wrap mast-inner">
+      <div class="wordmark"><b aria-hidden="true">V</b>vision <span>v1.3</span></div>
+      <nav aria-label="Report"><a href="#observations">Comparisons</a><a href="#packet">Reviewer packet</a><a id="previous-report" href="https://eaudoon.github.io/Vision/v1.2/">v1.2 review</a></nav>
+    </div>
+  </header>
+  <main class="wrap">
+    <div class="intro">
+      <div>
+        <p class="eyebrow">Ethereum mainnet · Chain 1</p>
+        <h1>Balancer Vault replay comparison</h1>
+        <p class="lead">Which sources recovered the same Vault transfers as the archived receipts in these three blocks?</p>
+      </div>
+      <aside class="capture" aria-labelledby="capture-title" id="capture" hidden>
+        <h2 id="capture-title">Public capture</h2>
+        <time id="captured-at"></time>
+        <p id="capture-summary"></p>
+      </aside>
+    </div>
+    <p id="load-status" class="status" role="status">Loading the reviewer packet…</p>
+    <button type="button" class="button" id="retry-packet" hidden>Retry packet</button>
+    <noscript><p>Enable JavaScript to compare observations, or <a href="./packet.json" download="vision-replay-review.json">download the reviewer packet</a>.</p></noscript>
+    <div id="report" hidden>
+      <div class="scope-line"><span>Vault contract</span> <code id="vault"></code></div>
+      <section id="observations" aria-labelledby="results-title">
+        <div class="section-heading"><h2 id="results-title">Block comparisons</h2><p id="result-count" role="status"></p></div>
+        <div class="filters" role="group" aria-label="Filter comparisons">
+          <label>Block<select id="block-filter"><option value="">All blocks</option></select></label>
+          <label>Source<select id="source-filter"><option value="">All sources</option></select></label>
+          <label>Decision<select id="state-filter"><option value="">All decisions</option></select></label>
+          <label class="toggle"><input id="show-diagnostics" type="checkbox">Show diagnostic examples</label>
+        </div>
+        <p class="diagnostic-note" id="diagnostic-note" hidden>Diagnostic examples alter copies of fixture observations to show how disagreement and missing evidence appear.</p>
+        <div id="results"></div>
+        <div id="empty" class="empty" hidden><p>No comparisons match these filters.</p><button id="reset-filters" type="button">Clear filters</button></div>
+      </section>
+      <section id="packet" class="packet" aria-labelledby="packet-title">
+        <div>
+          <h2 id="packet-title">Reviewer packet</h2>
+          <p>Download the complete snapshot, including sources hidden by the filters.</p>
+          <a id="download-packet" class="button" download="vision-replay-review.json">Download JSON</a>
+          <p class="digest">Packet SHA-256 <code id="packet-digest"></code></p>
+          <details class="disclosure"><summary>View the exact JSON</summary><pre id="packet-json"></pre></details>
+        </div>
+        <div class="verify">
+          <h3>Offline verification</h3>
+          <p>For the bundled capture, run this command from the matching Vision checkout. It rebuilds the packet from pinned evidence.</p>
+          <code class="command">python3 replay_compare.py --verify vision-replay-review.json</code>
+          <p>For a separately supplied capture, add <code>--capture original-capture.json</code> to check against that file.</p>
+        </div>
+      </section>
+      <section class="method" aria-labelledby="method-title">
+        <h2 id="method-title">Sources and scope</h2>
+        <p>The archive counts successful, three-topic Transfer logs with the Vault as indexed sender or recipient. Amounts are raw integers. Native ETH and internal movements are outside this review.</p>
+        <ul id="sources"></ul>
+        <p><a id="archive-link">Pinned archive</a> · <a id="license-link">Archive license</a> · <a href="https://github.com/EauDoon/Vision">Vision source</a></p>
+      </section>
+    </div>
+  </main>
+  <footer><div class="wrap">Vision · Ethereum evidence workbench</div></footer>
+</body>
+</html>

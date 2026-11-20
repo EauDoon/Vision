@@ -22,8 +22,14 @@ jobs:
         run: python3 -m unittest discover -s tests -v
       - name: Check the generated report
         run: python3 report.py --check
+      - name: Verify the static replay export
+        run: |
+          python3 publish_report.py --output "$RUNNER_TEMP/vision-replay"
+          python3 replay_compare.py --verify "$RUNNER_TEMP/vision-replay/packet.json"
       - name: Check the dashboard JavaScript
-        run: node --check static/app.js
+        run: |
+          node --check static/app.js
+          node --check static/replay/review.js
 
   browser:
     runs-on: ubuntu-24.04

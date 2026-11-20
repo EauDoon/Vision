@@ -33,6 +33,34 @@ Each crawl attempt has a 60-second acceptance deadline, a request-count budget, 
 
 ## Optional two-provider check for the Vault
 
+### v1.3 capture and comparison
+
+Open `/replay/` on the local workbench or visit the [static dashboard](https://eaudoon.github.io/Vision/). Both use the same release packet. Loading or filtering the report reads bundled evidence. The JSON includes the complete set of comparison sources and explicitly labels the diagnostic examples.
+
+To reproduce the bundled comparison from the repository root, run the following commands.
+
+```sh
+python3 replay_compare.py > vision-replay-review.json
+python3 replay_compare.py --verify vision-replay-review.json
+```
+
+To collect a **new dated observation**, these commands contact the two fixed, public Ethereum endpoints. They use the actual importer, the three single-block windows and both Vault topic filters. A provider-wide preflight transport failure stops further attempts against that endpoint. Keep the capture alongside the review so a reviewer can reproduce your export using that input.
+
+```sh
+VISION_RPC_ALLOWED_HOSTS=public.1rpc.io python3 capture_providers.py --public > capture.json
+python3 replay_compare.py --capture capture.json > my-replay.json
+python3 replay_compare.py --capture capture.json --verify my-replay.json
+python3 app.py --replay-capture capture.json
+```
+
+An unsuccessful public capture writes its evidence and exits with status 1. The other commands work offline with that file. The dashboard server accepts the capture path at startup and uses that snapshot until restart. A verifier given the same capture can reproduce the decisions. Establishing who collected an independently supplied file requires its provenance.
+
+The operators publish keyless endpoints. The host override applies to this capture command and permits Automata's public endpoint. [Allnodes PublicNode](https://ethereum.publicnode.com/) · [Automata 1RPC network table](https://docs.1rpc.io/using-the-web3-api/networks)
+
+For a static copy, run `python3 publish_report.py --output vision-site` with a new output directory. Serve its HTML, local script, stylesheet, packet and archive license together. The build and comparison verification run offline. The published [v1.2 report](https://eaudoon.github.io/Vision/v1.2/) and [original download](https://eaudoon.github.io/Vision/vision-balancer-vault-review.json) remain available.
+
+### v1.2 provider comparison
+
 Two-provider live importer verification remains open. To collect a separate public observation, run this from the repository root. The command contacts both public Ethereum endpoints and writes its results to the named local file.
 
 ```bash
@@ -52,6 +80,7 @@ The command starts a fresh importer run for each provider and each of blocks 22,
 | GET | `/api/search-export?q=...` | Bounded search evidence, supporting crawl windows and checksum. `event_witnesses` maps each exported live event ID to a local `scan_id` in `crawl_windows`. A null witness means that the index lacks a saved link. Address searches can also include the 50 latest windows, including empty ones. |
 | GET | `/api/scans` | Last 20 live crawl records. |
 | GET | `/api/transfer-review` | Offline Balancer Vault review for the three fixed Ethereum blocks. Returns the versioned packet used by the dashboard download. |
+| GET | `/api/replay-compare` or `/replay/packet.json` | v1.3 comparison with dated source observations, witness checks, field-level differences and an outer canonical SHA-256. |
 | POST | `/api/crawl` | JSON `{"address":"0x…","blocks":2,"end":22500000}`; optional end. Returns window, observed event count, coverage and block hashes. |
 | GET | `/api/case` | Fixed, fictional input, computed outputs, review history and boundary. |
 | POST | `/api/simulate` | JSON `{"realized_gains":"3000","income":"180"}`. Recompute the demo with alternate declarations; never saves a case or review. |

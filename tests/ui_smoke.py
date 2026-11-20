@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import argparse
 import copy
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -134,6 +135,101 @@ def exercise_transfer_review(page, expect, app_root, screenshot_dir):
     assert data == loaded.value.body() == page.locator("#transfer-review-json").text_content().encode()
     assert json.loads(data)["sha256"] == page.locator("#transfer-review-digest").inner_text()
     subprocess.run([sys.executable, str(app_root / "transfer_review.py"), "--verify", str(path)], check=True)
+    page.unroute(url)
+
+
+def exercise_replay_dashboard(page, expect, base, app_root, screenshot_dir):
+    url = "**/replay/packet.json"
+    scans_before = page.request.get(base + "/api/scans").json()
+    requests = []
+    page.on("request", lambda req: requests.append(req.url))
+    page.route(url, lambda route: route.fulfill(status=503, body="Packet unavailable"))
+    page.get_by_role("link", name="Replay dashboard").first.click()
+    expect(page.locator("#retry-packet")).to_be_visible()
+    expect(page.locator("#results details.observation")).to_have_count(0)
+    page.unroute(url)
+    with page.expect_response(url) as response:
+        page.locator("#retry-packet").click()
+    data = response.value.body()
+    packet = json.loads(data)
+    cards = page.locator("#results details.observation")
+    expect(cards).to_have_count(9)
+    expect(page.locator('#results [data-source="diagnostic"]')).to_have_count(0)
+    block, source, state = (page.locator("#" + key + "-filter") for key in ("block", "source", "state"))
+    if screenshot_dir:
+        capture_screens(page, Path(screenshot_dir), prefix="replay-")
+
+    source.select_option("publicnode")
+    for height, evidence in (("22431084", "transport"), ("17034870", "not_run")):
+        block.select_option(height)
+        expect(cards).to_have_count(1)
+        cards.first.locator(":scope > summary").click()
+        expect(cards.first).to_contain_text(evidence)
+        expect(cards.first).to_contain_text("Observed unavailable")
+
+    block.select_option("")
+    source.select_option("fixture")
+    expect(cards).to_have_count(3)
+    block.select_option("22431084")
+    state.select_option("matched")
+    expect(cards).to_have_count(1)
+    cards.first.locator(":scope > summary").focus()
+    page.keyboard.press("Enter")
+    for text in ("433410975363818", "381986670507558"):
+        expect(cards.first).to_contain_text(text)
+    block.select_option("17034869")
+    state.select_option("verified_zero")
+    expect(cards).to_have_count(1)
+    cards.first.locator(":scope > summary").click()
+    expect(cards.first).to_contain_text("93")
+    expect(cards.first).to_contain_text("208")
+
+    # Diagnostic cases remain identifiable when filtered to a single example.
+    page.locator("#show-diagnostics").check()
+    state.select_option("")
+    source.select_option("diagnostic")
+    block.select_option("22431084")
+    state.select_option("disagreement")
+    expect(cards).to_have_count(1)
+    cards.first.locator(":scope > summary").click()
+    examples = next(s["blocks"] for s in packet["sources"] if s["kind"] == "diagnostic")
+    cases = {b["block_number"]: b for b in examples}
+    difference, = cases[22431084]["diff"]["changed"]
+    for amount in (difference["expected"]["raw_amount"], difference["observed"]["raw_amount"]):
+        expect(cards.first).to_contain_text(amount)
+    block.select_option("17034870")
+    cards.first.locator(":scope > summary").click()
+    for key in ("missing", "extra"):
+        row, = cases[17034870]["diff"][key]
+        expect(cards.first).to_contain_text(str(row["log_index"]))
+    state.select_option("incomplete")
+    block.select_option("17034869")
+    expect(cards).to_have_count(1)
+    cards.first.locator(":scope > summary").click()
+    expect(cards.first).to_contain_text(re.compile("recipient", re.I))
+    if screenshot_dir:
+        capture_screens(page, Path(screenshot_dir), prefix="replay-detail-")
+    for width in (1440, 768, 390, 320):
+        page.set_viewport_size({"width": width, "height": 900})
+        assert page.evaluate("document.documentElement.scrollWidth <= innerWidth"), f"Replay detail overflow at {width}px"
+
+    # Changing filters cannot change, re-fetch or truncate the reviewed packet.
+    page.route(url, lambda route: route.abort())
+    page.get_by_text("View the exact JSON", exact=True).click()
+    expect(page.locator("#packet-json")).to_be_visible()
+    with page.expect_download() as event:
+        page.locator("#download-packet").click()
+    downloaded = event.value
+    assert downloaded.suggested_filename == "vision-replay-review.json"
+    path = Path(downloaded.path())
+    assert path.read_bytes() == data == page.locator("#packet-json").text_content().encode("utf-8")
+    body = {key: value for key, value in packet.items() if key != "sha256"}
+    encoded = json.dumps(body, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+    assert hashlib.sha256(encoded).hexdigest() == packet["sha256"]
+    expect(page.locator("#packet-digest")).to_have_text(packet["sha256"])
+    subprocess.run([sys.executable, str(app_root / "replay_compare.py"), "--verify", str(path)], check=True)
+    assert scans_before == page.request.get(base + "/api/scans").json()
+    assert all(url.startswith(base + "/") or url.startswith("blob:") for url in requests), requests
     page.unroute(url)
 
 
@@ -291,8 +387,9 @@ def main():
                         page.locator(".export-search").click()
                     index = json.loads(Path(event.value.path()).read_text())
                     assert index, "Empty indexed-evidence export"
+                    exercise_replay_dashboard(page, expect, base, args.app_root, destination)
                     assert not js_errors, js_errors
-                    print("PASS: loopback workbench, Vault packet download and offline verification, search, labels, errors, fictional review, exports, history, and responsive layouts.")
+                    print("PASS: loopback workbench, Vault review, replay dashboard filters, row diffs, responsive layouts and verified packet downloads.")
                 finally:
                     browser.close()
         finally:
