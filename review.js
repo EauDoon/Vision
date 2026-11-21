@@ -274,3 +274,14 @@ if (['localhost', '127.0.0.1'].includes(location.hostname) && ['/replay/', '/rep
   byId('previous-report').href = '/Vision/v1.2/';
 }
 loadPacket();
+
+// A finite, decorative assembly sequence. It reads no packet data; moving the
+// illustration never changes a filter, a record or a downloadable observation.
+const motionButton = byId('replay-motion');
+motionButton.hidden = false;
+motionButton.addEventListener('click', () => {
+  const instrument = byId('instrument');
+  instrument.classList.remove('sequence');
+  void instrument.offsetWidth;
+  instrument.classList.add('sequence');
+});
