@@ -140,7 +140,7 @@ class BackfillTests(unittest.TestCase):
 
     def test_legacy_successor_header_and_migration(self):
         path = Path(self.tmp.name)/'old.sqlite'
-        with sqlite3.connect(path) as connection:
+        with contextlib.closing(sqlite3.connect(path)) as connection, connection:
             connection.execute('CREATE TABLE blocks(height INTEGER PRIMARY KEY, hash TEXT NOT NULL)')
         legacy = Store(path)
         right = self.crawler(A, start=11, end=11)

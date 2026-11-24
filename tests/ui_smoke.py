@@ -214,6 +214,17 @@ def exercise_replay_dashboard(page, expect, base, app_root, screenshot_dir):
         assert page.evaluate("document.documentElement.scrollWidth <= innerWidth"), f"Replay detail overflow at {width}px"
 
     # Changing filters cannot change, re-fetch or truncate the reviewed packet.
+    shared = page.url
+    page.goto(shared)
+    expect(cards).to_have_count(1)
+    expect(cards.first).to_have_attribute("data-source", "diagnostic")
+    expect(cards.first).to_have_attribute("data-state", "incomplete")
+    # Clearing an empty view restores the default evidence-only set.
+    state.select_option("matched")
+    page.locator("#reset-filters").click()
+    expect(cards).to_have_count(9)
+    expect(page.locator("#show-diagnostics")).not_to_be_checked()
+    assert "diagnostics=" not in page.url and "source=" not in page.url
     page.route(url, lambda route: route.abort())
     page.get_by_text("View the exact JSON", exact=True).click()
     expect(page.locator("#packet-json")).to_be_visible()

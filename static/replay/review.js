@@ -57,6 +57,32 @@ function setSourceOptions() {
   input.value = availableSources().some(source => source.id === current) ? current : '';
 }
 
+// The URL describes only the view. Never use its values to fetch data.
+const viewKeys = ['block', 'source', 'state'];
+function restoreView() {
+  const query = new URLSearchParams(location.search);
+  byId('show-diagnostics').checked = query.get('diagnostics') === '1';
+  setSourceOptions();
+  for (const key of viewKeys) {
+    const select = byId(key + '-filter');
+    const value = query.get(key);
+    select.value = [...select.options].some(option => option.value === value) ? value : '';
+  }
+}
+
+function saveView() {
+  const url = new URL(location.href);
+  for (const key of viewKeys) {
+    const value = byId(key + '-filter').value;
+    if (value) url.searchParams.set(key, value);
+    else url.searchParams.delete(key);
+  }
+  if (byId('show-diagnostics').checked) url.searchParams.set('diagnostics', '1');
+  else url.searchParams.delete('diagnostics');
+  history.replaceState(history.state, '', url);
+  renderResults();
+}
+
 function eventRow(row) {
   const card = element('div', undefined, 'event');
   if (!row || typeof row !== 'object' || !Number.isInteger(row.log_index) ||
@@ -220,7 +246,7 @@ function renderPacket(data, bytes, raw) {
     ...packet.scope.blocks.map(number => sourceOption(number.toLocaleString('en-US'), String(number))));
   byId('state-filter').replaceChildren(sourceOption('All decisions', ''),
     ...Object.entries(decisions).map(([key, label]) => sourceOption(label, key)));
-  setSourceOptions();
+  restoreView();
   byId('archive-link').href = packet.archive.repository + '/tree/' + packet.archive.revision;
   byId('license-link').href = archiveBase + '/LICENSE';
   byId('sources').replaceChildren(...packet.sources.map(source => {
@@ -258,14 +284,17 @@ async function loadPacket() {
   }
 }
 
-for (const id of ['block-filter', 'source-filter', 'state-filter']) byId(id).addEventListener('change', renderResults);
-byId('show-diagnostics').addEventListener('change', () => { setSourceOptions(); renderResults(); });
+for (const key of viewKeys) byId(key + '-filter').addEventListener('change', saveView);
+byId('show-diagnostics').addEventListener('change', () => { setSourceOptions(); saveView(); });
+window.addEventListener('popstate', () => { if (packet) { restoreView(); renderResults(); } });
 byId('retry-packet').addEventListener('click', loadPacket);
 byId('reset-filters').addEventListener('click', () => {
   byId('block-filter').value = '';
   byId('source-filter').value = '';
   byId('state-filter').value = '';
-  renderResults();
+  byId('show-diagnostics').checked = false;
+  setSourceOptions();
+  saveView();
   byId('block-filter').focus();
 });
 if (['localhost', '127.0.0.1'].includes(location.hostname) && ['/replay/', '/replay/index.html'].includes(location.pathname)) {

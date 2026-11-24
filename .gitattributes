@@ -1,0 +1,4 @@
+# These generated reports are verified byte-for-byte against the offline renderer.
+static/report-figure.svg text eol=lf
+static/report.html text eol=lf
+static/vision-field-note.html text eol=lf
