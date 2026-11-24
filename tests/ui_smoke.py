@@ -219,12 +219,39 @@ def exercise_replay_dashboard(page, expect, base, app_root, screenshot_dir):
     expect(cards).to_have_count(1)
     expect(cards.first).to_have_attribute("data-source", "diagnostic")
     expect(cards.first).to_have_attribute("data-state", "incomplete")
-    # Clearing an empty view restores the default evidence-only set.
+    # Clear must be offered even while a filtered view still has results.
+    expect(page.get_by_role("button", name="Clear filters")).to_be_visible()
+    page.get_by_role("button", name="Clear filters").click()
+    expect(cards).to_have_count(9)
+    expect(page.locator("#show-diagnostics")).not_to_be_checked()
+    page.goto(shared)
+    expect(cards).to_have_count(1)
+    # Clearing an empty view also works and restores the default evidence-only set.
     state.select_option("matched")
     page.locator("#reset-filters").click()
     expect(cards).to_have_count(9)
     expect(page.locator("#show-diagnostics")).not_to_be_checked()
     assert "diagnostics=" not in page.url and "source=" not in page.url
+    expect(page.locator("#reset-filters")).to_be_hidden()
+
+    # A write failure may leave the address unchanged but must not freeze the
+    # evidence view or leave an accessible announcement claiming it is shareable.
+    page.evaluate("""() => {
+      const original = history.replaceState;
+      history.replaceState = () => { throw new DOMException("Unavailable", "SecurityError"); };
+      window.restoreHistory = () => { history.replaceState = original; };
+    }""")
+    source.select_option("fixture")
+    block.select_option("17034869")
+    expect(cards).to_have_count(1)
+    expect(cards.first).to_have_attribute("data-state", "verified_zero")
+    expect(page.locator("#view-link-unavailable")).to_be_visible()
+    assert "source=" not in page.url
+    page.evaluate("window.restoreHistory()")
+    block.select_option("17034870")
+    expect(cards.first).to_have_attribute("data-state", "matched")
+    expect(page.locator("#view-link-unavailable")).to_be_hidden()
+    assert "block=17034870" in page.url and "source=fixture" in page.url
     page.route(url, lambda route: route.abort())
     page.get_by_text("View the exact JSON", exact=True).click()
     expect(page.locator("#packet-json")).to_be_visible()

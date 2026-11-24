@@ -6,7 +6,7 @@
 
 ## Compare Balancer Vault replays
 
-Replay filters now travel with the page URL. Copy the address after choosing a block, source or decision; reopening it restores the same view of the bundled packet. Diagnostic examples remain opt-in. Clearing an empty view returns to the nine non-diagnostic comparisons. The next release check is to reopen a filtered public link and verify that its complete downloaded packet still matches the pinned digest.
+Replay filters travel with the page URL. Copy the address after choosing a block, source or decision; reopening it restores the same view of the bundled packet. Diagnostic examples remain opt-in. **Clear filters** returns to the nine non-diagnostic comparisons from any filtered view. If the browser cannot update the address, the filters still work and show a warning before you share it. The release check is to reopen a filtered public link and confirm that the complete downloaded packet still matches the pinned digest.
 
 Which sources recovered the archived transfers, and what explains each difference? Open the [published replay comparison](https://eaudoon.github.io/Vision/) or start `python3 app.py` and open the [local dashboard](http://127.0.0.1:8765/replay/). Pick a block and source to inspect its rows, block hashes, receipt witnesses and filter coverage. Enable the labeled diagnostic examples to explore a disagreement or an incomplete observation.
 

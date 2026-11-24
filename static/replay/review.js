@@ -79,7 +79,13 @@ function saveView() {
   }
   if (byId('show-diagnostics').checked) url.searchParams.set('diagnostics', '1');
   else url.searchParams.delete('diagnostics');
-  history.replaceState(history.state, '', url);
+  const notice = byId('view-link-unavailable');
+  try {
+    history.replaceState(history.state, '', url);
+  } catch {
+    // History may be denied or throttled; the evidence controls must still work.
+  }
+  notice.hidden = location.href === url.href;
   renderResults();
 }
 
@@ -219,6 +225,7 @@ function renderResults() {
   }
   byId('results').replaceChildren(result);
   byId('result-count').textContent = count + (count === 1 ? ' comparison' : ' comparisons');
+  byId('reset-filters').hidden = !(blockFilter || sourceFilter || stateFilter || byId('show-diagnostics').checked);
   byId('diagnostic-note').hidden = !byId('show-diagnostics').checked;
   byId('empty').hidden = count !== 0;
 }
@@ -286,7 +293,12 @@ async function loadPacket() {
 
 for (const key of viewKeys) byId(key + '-filter').addEventListener('change', saveView);
 byId('show-diagnostics').addEventListener('change', () => { setSourceOptions(); saveView(); });
-window.addEventListener('popstate', () => { if (packet) { restoreView(); renderResults(); } });
+window.addEventListener('popstate', () => {
+  if (!packet) return;
+  restoreView();
+  byId('view-link-unavailable').hidden = true;
+  renderResults();
+});
 byId('retry-packet').addEventListener('click', loadPacket);
 byId('reset-filters').addEventListener('click', () => {
   byId('block-filter').value = '';
