@@ -217,9 +217,11 @@
           <label>Decision<select id="state-filter"><option value="">All decisions</option></select></label>
           <label class="toggle"><input id="show-diagnostics" type="checkbox">Show diagnostic examples</label>
         </div>
+        <button id="reset-filters" type="button" hidden>Clear filters</button>
+        <p id="view-link-unavailable" role="status" hidden>The filters changed, but this browser could not update the shareable address.</p>
         <p class="diagnostic-note" id="diagnostic-note" hidden>Diagnostic examples alter copies of fixture observations to show how disagreement and missing evidence appear.</p>
         <div id="results"></div>
-        <div id="empty" class="empty" hidden><p>No comparisons match these filters.</p><button id="reset-filters" type="button">Clear filters</button></div>
+        <div id="empty" class="empty" hidden><p>No comparisons match these filters.</p></div>
       </section>
       <section id="packet" class="packet" aria-labelledby="packet-title">
         <div>
