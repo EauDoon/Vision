@@ -271,6 +271,64 @@ def exercise_replay_dashboard(page, expect, base, app_root, screenshot_dir):
     page.unroute(url)
 
 
+def exercise_atlas_and_matrix(page, expect, base):
+    # The slashless link used by the local workbench must keep its selected source.
+    page.goto(base + "/replay?source=publicnode&block=17034869")
+    cards = page.locator("#results .observation")
+    expect(cards).to_have_count(1)
+    expect(cards.first).to_have_attribute("data-source", "publicnode")
+    digest = page.locator("#packet-digest").text_content()
+    with page.expect_download() as event:
+        page.locator("#download-selection").click()
+    export = json.loads(Path(event.value.path()).read_text())
+    assert export["packet_sha256"] == digest
+    assert export["comparisons"] == [{"block": 17034869, "source": "publicnode", "kind": "public_capture",
+                                      "decision": "unavailable", "archive_count": 0, "observed_count": None}]
+    page.get_by_text("Compare sources side by side", exact=True).click()
+    expect(page.locator("#matrix tbody tr")).to_have_count(3)
+    page.get_by_role("button", name="Constructed fixture replay, block 17034869, Verified zero").click()
+    expect(cards).to_have_count(1)
+    expect(cards.first.locator("summary").first).to_be_focused()
+    assert cards.first.evaluate("(card) => card.open")
+    page.locator("#show-diagnostics").check()
+    expect(page.locator("#matrix tbody tr")).to_have_count(4)
+    page.get_by_role("button", name="Clear filters").click()
+    expect(page.locator("#matrix tbody tr")).to_have_count(3)
+
+    page.get_by_role("link", name="Evidence atlas").click()
+    selector = page.get_by_label("Inspect", exact=True)
+    expect(selector).to_have_value("compare")
+    page.emulate_media(reduced_motion="reduce")
+    selector.select_option("verify")
+    expect(page.locator("#inspector-title")).to_have_text("Offline verifier")
+    assert "node=verify" in page.url
+    page.reload()
+    expect(selector).to_have_value("verify")
+    page.locator("#query-panel summary").click()
+    result = json.loads(page.locator("#answer").text_content())["data"]["component"]
+    assert result["id"] == "verify"
+    assert [item["id"] for item in result["inputs"]] == ["packet", "compare"]
+    scene = page.locator("#scene")
+    initial = scene.evaluate("(c) => c.toDataURL()")
+    scene.focus()
+    page.keyboard.press("ArrowRight")
+    assert initial != scene.evaluate("(c) => c.toDataURL()")
+    page.get_by_role("button", name="Reset view").click()
+    assert initial == scene.evaluate("(c) => c.toDataURL()")
+    for width in (1440, 768, 390, 320):
+        page.set_viewport_size({"width": width, "height": 900})
+        assert page.evaluate("document.documentElement.scrollWidth <= innerWidth"), f"Atlas overflow at {width}px"
+    context = page.context.browser.new_context(java_script_enabled=False)
+    try:
+        fallback = context.new_page()
+        fallback.goto(base + "/replay/atlas.html")
+        expect(fallback.locator(".cards article")).to_have_count(6)
+        fallback.locator("#verify .inputs a").first.click()
+        assert fallback.url.endswith("#packet")
+    finally:
+        context.close()
+
+
 def capture_screens(page, out, prefix=""):
     out.mkdir(parents=True, exist_ok=True)
     for name, width, height in (("desktop", 1440, 900), ("mobile", 390, 844)):
@@ -426,6 +484,7 @@ def main():
                     index = json.loads(Path(event.value.path()).read_text())
                     assert index, "Empty indexed-evidence export"
                     exercise_replay_dashboard(page, expect, base, args.app_root, destination)
+                    exercise_atlas_and_matrix(page, expect, base)
                     assert not js_errors, js_errors
                     print("PASS: loopback workbench, Vault review, replay dashboard filters, row diffs, responsive layouts and verified packet downloads.")
                 finally:

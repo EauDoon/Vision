@@ -2,7 +2,13 @@
 
 **An evidence-first workbench for Ethereum.** Search an address or transaction, inspect the transfers behind a label, and export exactly what the local index saw. A separate fictional case shows how verified economic records can be reconciled without guessing who owns a wallet or how much tax they owe.
 
-**v1.3.0 · Python ≥3.10 · SQLite · Single-user research workbench.** The bundled reports run offline with the Python standard library.
+**v1.4.0 · Python ≥3.10 · SQLite · Single-user research workbench.** The bundled reports run offline with the Python standard library.
+
+## Trace a replay observation
+
+The [evidence atlas](https://eaudoon.github.io/Vision/atlas.html) connects the pinned archive, constructed importer replay, dated provider capture, comparison, packet and verifier. Start the workbench and choose **Evidence atlas** for the local version. Drag the map or use its arrow keys to rotate. Choose a component to inspect its source and inputs. The component URL reopens that selection. A source directory also works with JavaScript disabled. The expandable read-only query shows the selected component as local JSON.
+
+In the replay comparison, open **Compare sources side by side** and choose a cell to inspect one source and block. **Download visible comparison summaries** exports decisions and counts for the current filters with the source packet digest. A missing observation has a null count. Use **Download JSON** in the reviewer packet section for the complete verifiable evidence. Shared filters now survive the local redirect from `/replay` to `/replay/`.
 
 ## Compare Balancer Vault replays
 

@@ -259,3 +259,13 @@ footer a { padding: 4px 0; }
   .mast-inner { row-gap: 0; }
   .cover-actions { column-gap: 11px; }
 }
+
+.matrix { margin: 16px 0; padding: 12px 15px; border: 1px solid var(--line); background: var(--paper); }
+.matrix summary { font-weight: 650; }
+.matrix p { font-size: 14px; margin: 8px 0; }
+.matrix-scroll { overflow-x: auto; }
+.matrix table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; }
+.matrix caption { text-align: left; padding-block: 7px; font-weight: 650; }
+.matrix th, .matrix td { padding: 4px 8px; border-top: 1px solid var(--line); }
+.matrix button { margin: 0; min-height: 36px; }
+.selection-link { display: inline-block; padding-block: 10px; font-size: 14px; }

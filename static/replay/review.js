@@ -17,6 +17,7 @@ const tokens = {
 let packet;
 let archiveBase;
 let downloadUrl;
+let selectionUrl;
 
 function element(tag, content, className) {
   const node = document.createElement(tag);
@@ -195,6 +196,59 @@ function observation(source, block) {
   return item;
 }
 
+function renderMatrix() {
+  const table = byId('matrix');
+  const header = element('tr');
+  header.append(element('th', 'Source'));
+  for (const height of packet.scope.blocks) {
+    const th = element('th', height.toLocaleString('en-US'));
+    th.scope = 'col';
+    header.append(th);
+  }
+  const head = element('thead');
+  head.append(header);
+  const body = element('tbody');
+  for (const source of availableSources()) {
+    const row = element('tr');
+    const label = element('th', source.label);
+    label.scope = 'row';
+    row.append(label);
+    for (const block of source.blocks) {
+      const cell = element('td');
+      const button = element('button', decisions[block.decision], 'badge ' + block.decision);
+      button.type = 'button';
+      button.setAttribute('aria-label', source.label + ', block ' + block.block_number + ', ' + decisions[block.decision]);
+      button.addEventListener('click', () => {
+        byId('source-filter').value = source.id;
+        byId('block-filter').value = String(block.block_number);
+        byId('state-filter').value = '';
+        saveView();
+        const card = byId('results').querySelector('.observation');
+        card.open = true;
+        card.querySelector('summary').focus();
+      });
+      cell.append(button);
+      row.append(cell);
+    }
+    body.append(row);
+  }
+  const caption = element('caption', 'Decisions by source and block');
+  table.replaceChildren(caption, head, body);
+}
+
+function selectionDownload(groups) {
+  const rows = [];
+  for (const height of packet.scope.blocks) {
+    for (const {source, block} of groups.get(height) || []) {
+      rows.push({block: height, source: source.id, kind: source.kind, decision: block.decision,
+        archive_count: block.expected.count, observed_count: block.observed?.count ?? null});
+    }
+  }
+  const summary = {schema: 'vision/replay-selection@1', packet_sha256: packet.sha256, comparisons: rows};
+  if (selectionUrl) URL.revokeObjectURL(selectionUrl);
+  selectionUrl = URL.createObjectURL(new Blob([JSON.stringify(summary, null, 2) + '\n'], {type: 'application/json'}));
+  byId('download-selection').href = selectionUrl;
+}
 function renderResults() {
   const blockFilter = byId('block-filter').value;
   const sourceFilter = byId('source-filter').value;
@@ -224,6 +278,7 @@ function renderResults() {
     result.append(section);
   }
   byId('results').replaceChildren(result);
+  selectionDownload(groups);
   byId('result-count').textContent = count + (count === 1 ? ' comparison' : ' comparisons');
   byId('reset-filters').hidden = !(blockFilter || sourceFilter || stateFilter || byId('show-diagnostics').checked);
   byId('diagnostic-note').hidden = !byId('show-diagnostics').checked;
@@ -254,6 +309,7 @@ function renderPacket(data, bytes, raw) {
   byId('state-filter').replaceChildren(sourceOption('All decisions', ''),
     ...Object.entries(decisions).map(([key, label]) => sourceOption(label, key)));
   restoreView();
+  renderMatrix();
   byId('archive-link').href = packet.archive.repository + '/tree/' + packet.archive.revision;
   byId('license-link').href = archiveBase + '/LICENSE';
   byId('sources').replaceChildren(...packet.sources.map(source => {
@@ -292,10 +348,11 @@ async function loadPacket() {
 }
 
 for (const key of viewKeys) byId(key + '-filter').addEventListener('change', saveView);
-byId('show-diagnostics').addEventListener('change', () => { setSourceOptions(); saveView(); });
+byId('show-diagnostics').addEventListener('change', () => { setSourceOptions(); renderMatrix(); saveView(); });
 window.addEventListener('popstate', () => {
   if (!packet) return;
   restoreView();
+  renderMatrix();
   byId('view-link-unavailable').hidden = true;
   renderResults();
 });
@@ -306,6 +363,7 @@ byId('reset-filters').addEventListener('click', () => {
   byId('state-filter').value = '';
   byId('show-diagnostics').checked = false;
   setSourceOptions();
+  renderMatrix();
   saveView();
   byId('block-filter').focus();
 });

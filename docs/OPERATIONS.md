@@ -57,7 +57,7 @@ An unsuccessful public capture writes its evidence and exits with status 1. The 
 
 The operators publish keyless endpoints. The host override applies to this capture command and permits Automata's public endpoint. [Allnodes PublicNode](https://ethereum.publicnode.com/) · [Automata 1RPC network table](https://docs.1rpc.io/using-the-web3-api/networks)
 
-For a static copy, run `python3 publish_report.py --output vision-site` with a new output directory. Serve its HTML, local script, stylesheet, packet and archive license together. The build and comparison verification run offline. The published [v1.2 report](https://eaudoon.github.io/Vision/v1.2/) and [original download](https://eaudoon.github.io/Vision/vision-balancer-vault-review.json) remain available.
+For a static copy, run `python3 publish_report.py --output vision-site` with a new output directory. Serve all exported files together. The replay and its evidence atlas use relative links so the same export works under a project subpath. The build and comparison verification run offline. The published [v1.2 report](https://eaudoon.github.io/Vision/v1.2/) and [original download](https://eaudoon.github.io/Vision/vision-balancer-vault-review.json) remain available.
 
 ### v1.2 provider comparison
 

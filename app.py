@@ -13,7 +13,7 @@ from reconcile import demo_case, reconcile
 from store import DEMO_ADDRESS, Store, digest, encode
 from transfer_review import build_packet
 
-VERSION = "1.3.0"
+VERSION = "1.4.0"
 STATIC = Path(__file__).resolve().parent / "static"
 FILES = {"/":("index.html","text/html; charset=utf-8"),"/index.html":("index.html","text/html; charset=utf-8"),
          "/static/app.js":("app.js","text/javascript; charset=utf-8"),"/static/style.css":("style.css","text/css; charset=utf-8")}
@@ -23,6 +23,9 @@ for route, asset, mime in (
     ("/replay/", "replay/index.html", "text/html; charset=utf-8"),
     ("/replay/index.html", "replay/index.html", "text/html; charset=utf-8"),
     ("/replay/review.js", "replay/review.js", "text/javascript; charset=utf-8"),
+    ("/replay/atlas.html", "replay/atlas.html", "text/html; charset=utf-8"),
+    ("/replay/atlas.css", "replay/atlas.css", "text/css; charset=utf-8"),
+    ("/replay/atlas.js", "replay/atlas.js", "text/javascript; charset=utf-8"),
     ("/replay/style.css", "replay/style.css", "text/css; charset=utf-8"),
 ):
     FILES[route] = (asset, mime)
@@ -116,7 +119,7 @@ class Handler(BaseHTTPRequestHandler):
             return self.send_data(200,(STATIC/name).read_bytes(),mime)
         if not write and path == "/replay":
             self.send_response(308)
-            self.send_header("Location", "/replay/")
+            self.send_header("Location", "/replay/" + ("?" + url.query if url.query else ""))
             self.send_header("Content-Length", "0")
             self.end_headers()
             return
