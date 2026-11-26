@@ -22,6 +22,72 @@
   let yaw = initialYaw, pitch = initialPitch, active, projected = [], drag;
   selector.replaceChildren(...components.map(node => new Option(node.name, node.id)));
 
+  const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+
+  // Keep the six projected labels apart as their depth order changes on orbit.
+  function arrange(nodes, width, height) {
+    for (let pass = 0; pass < 28; pass++) {
+      let settled = true;
+      for (let i = 0; i < nodes.length; i++) {
+        const a = nodes[i];
+        for (const b of nodes.slice(i + 1)) {
+          const dx = b.x - a.x, dy = b.y - a.y;
+          const overlapX = a.w + b.w + 12 - Math.abs(dx);
+          const overlapY = a.h + b.h + 12 - Math.abs(dy);
+          if (overlapX <= .1 || overlapY <= .1) continue;
+          settled = false;
+          if (overlapX < overlapY) {
+            const shift = (dx >= 0 ? 1 : -1) * overlapX / 2;
+            a.x -= shift; b.x += shift;
+          } else {
+            const shift = (dy >= 0 ? 1 : -1) * overlapY / 2;
+            a.y -= shift; b.y += shift;
+          }
+        }
+      }
+      for (const node of nodes) {
+        node.x = clamp(node.x, node.w + 6, width - node.w - 6);
+        node.y = clamp(node.y, node.h + 6, height - node.h - 10);
+      }
+      if (settled && pass > 0) break;
+    }
+  }
+
+  // Find an unobstructed route, using a side channel when the camera lines up cards.
+  function route(start, end, nodes, width) {
+    const obstacles = nodes.filter(p => p !== start && p !== end);
+    function crosses(a, b, rect) {
+      let lo = 0, hi = 1;
+      for (const [axis, half] of [['x', rect.w + 3], ['y', rect.h + 4]]) {
+        const delta = b[axis] - a[axis], offset = a[axis] - rect[axis];
+        if (Math.abs(delta) < .01) {
+          if (Math.abs(offset) >= half) return false;
+        } else {
+          const p = (-half - offset) / delta, q = (half - offset) / delta;
+          lo = Math.max(lo, Math.min(p, q));
+          hi = Math.min(hi, Math.max(p, q));
+        }
+      }
+      return lo < hi;
+    }
+    const clear = (a, b) => obstacles.every(rect => !crosses(a, b, rect));
+    if (clear(start, end)) return [start, end];
+    let best = null, shortest = Infinity;
+    for (const node of obstacles) {
+      for (const side of [-1, 1]) {
+        const x = clamp(node.x + side * (node.w + 10), 3, width - 3);
+        const near = {x, y: start.y}, far = {x, y: end.y};
+        const distance = Math.abs(x - start.x) + Math.abs(start.y - end.y) + Math.abs(end.x - x);
+        if (Math.abs(x - end.x) < end.w + 12 || Math.abs(x - start.x) < start.w + 3) continue;
+        if (distance < shortest && clear(start, near) && clear(near, far) && clear(far, end)) {
+          best = [start, near, far, end];
+          shortest = distance;
+        }
+      }
+    }
+    return best || [start, end];
+  }
+
   function render() {
     const width = canvas.clientWidth, height = canvas.clientHeight;
     if (!width || !height) return;
@@ -29,52 +95,71 @@
     canvas.width = Math.round(width * ratio);
     canvas.height = Math.round(height * ratio);
     ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
-    const size = Math.min(width / 485, height / 290);
+    const compact = width < 510;
+    ctx.font = '600 ' + (compact ? 13 : 15) + 'px Arial';
     function project([x, y, z]) {
       const X = x * Math.cos(yaw) + z * Math.sin(yaw);
       const depth = z * Math.cos(yaw) - x * Math.sin(yaw);
       const Y = y * Math.cos(pitch) - depth * Math.sin(pitch);
       const Z = y * Math.sin(pitch) + depth * Math.cos(pitch);
-      const perspective = 540 / (540 - Z);
-      return {x: width / 2 + X * size * perspective,
-              y: height / 2 + Y * size * perspective, depth: Z, scale: perspective};
+      const perspective = 560 / (560 - Z);
+      return {x: width / 2 + X * (width - (compact ? 100 : 165)) / 400 * perspective,
+              y: height * .52 + Y * (height - 56) / 265 * perspective, depth: Z};
     }
-    function line(a, b, color, weight) {
-      ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y);
-      ctx.strokeStyle = color; ctx.lineWidth = weight; ctx.stroke();
+    // A perspective floor gives the orbit a reference without introducing data edges.
+    ctx.lineWidth = .8;
+    ctx.strokeStyle = '#42664c';
+    function floorLine(a, b) {
+      const first = project(a), last = project(b);
+      ctx.beginPath(); ctx.moveTo(first.x, first.y); ctx.lineTo(last.x, last.y); ctx.stroke();
     }
-    for (let i = -180; i <= 180; i += 36) {
-      line(project([i, 108, -170]), project([i, 108, 150]), '#375143', .6);
-      line(project([-180, 108, i]), project([180, 108, i]), '#375143', .6);
+    ctx.save();
+    ctx.globalAlpha = .5;
+    for (let i = -180; i <= 180; i += 30) {
+      floorLine([i, 138, -140], [i, 138, 140]);
+      floorLine([-180, 138, i], [180, 138, i]);
     }
-    projected = components.map(node => ({...project(node.position), node})).sort((a,b) => a.depth - b.depth);
+    ctx.restore();
+    projected = components.map(node => {
+      const label = compact ? node.label : node.name;
+      return {...project(node.position), node, label, w: ctx.measureText(label).width / 2 + 12, h: compact ? 14 : 18};
+    }).sort((a, b) => a.depth - b.depth);
+    arrange(projected, width, height);
     for (const end of projected) {
       for (const input of end.node.inputs) {
         const start = projected.find(point => point.node.id === input);
-        const highlighted = end.node === active || start.node === active;
-        const color = highlighted ? '#d6f59d' : '#85a18e';
-        line(start, end, color, highlighted ? 1.9 : 1);
-        const dx = end.x - start.x, dy = end.y - start.y;
-        const angle = Math.atan2(dy, dx), ax = start.x + dx * .58, ay = start.y + dy * .58;
-        ctx.beginPath(); ctx.moveTo(ax, ay);
-        for (const turn of [-.48, .48]) ctx.lineTo(ax - 7 * Math.cos(angle + turn), ay - 7 * Math.sin(angle + turn));
-        ctx.fillStyle = color; ctx.closePath(); ctx.fill();
+        const path = route(start, end, projected, width);
+        const last = path[path.length - 2];
+        const dx = end.x - last.x, dy = end.y - last.y;
+        // Connect the card boundaries. Stop the arrow before the lower bevel.
+        const inset = Math.min((end.w + 3) / Math.abs(dx), (end.h + 4) / Math.abs(dy));
+        const tip = {x: end.x - dx * inset, y: end.y - dy * inset};
+        const near = start.node === active || end.node === active;
+        ctx.strokeStyle = near ? '#d4f59b' : '#8aa994';
+        ctx.fillStyle = ctx.strokeStyle;
+        ctx.lineWidth = near ? 2 : 1.4;
+        ctx.beginPath(); ctx.moveTo(start.x, start.y);
+        for (const point of path.slice(1, -1)) ctx.lineTo(point.x, point.y);
+        ctx.lineTo(tip.x, tip.y); ctx.stroke();
+        const angle = Math.atan2(dy, dx);
+        ctx.beginPath(); ctx.moveTo(tip.x, tip.y);
+        for (const turn of [-.46, .46]) ctx.lineTo(tip.x - 9 * Math.cos(angle + turn), tip.y - 9 * Math.sin(angle + turn));
+        ctx.closePath(); ctx.fill();
       }
     }
-    for (const point of projected) {
-      const selected = point.node === active;
-      const r = (selected ? 10 : 6) * point.scale;
-      const glow = ctx.createRadialGradient(point.x, point.y, 0, point.x, point.y, r * 3);
-      glow.addColorStop(0, selected ? '#dbff9088' : '#76b39266'); glow.addColorStop(1, '#83a78b00');
-      ctx.fillStyle = glow; ctx.fillRect(point.x-r*3, point.y-r*3, r*6, r*6);
-      ctx.beginPath(); ctx.arc(point.x, point.y, r, 0, Math.PI * 2);
-      ctx.fillStyle = selected ? '#e0f8ab' : '#79a48a'; ctx.fill();
-      ctx.strokeStyle = '#e7f8cc'; ctx.lineWidth = 1.3; ctx.stroke();
-      ctx.textAlign = 'center';
-      ctx.font = (selected ? 'bold ' : '') + (width < 420 ? '11' : '13') + 'px Arial';
-      ctx.lineWidth = 3.5; ctx.strokeStyle = '#142d22';
-      ctx.strokeText(point.node.label, point.x, point.y + r + 14);
-      ctx.fillStyle = '#f3f6e8'; ctx.fillText(point.node.label, point.x, point.y + r + 14);
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    for (const node of projected) {
+      const on = node.node === active;
+      const x = node.x - node.w, y = node.y - node.h;
+      ctx.fillStyle = on ? '#7eab62' : '#426a53';
+      ctx.beginPath(); ctx.roundRect(x, y + 3, node.w * 2, node.h * 2, 5); ctx.fill();
+      ctx.fillStyle = on ? '#d9f49d' : '#183b2d';
+      ctx.strokeStyle = on ? '#efffc4' : '#91b69a';
+      ctx.lineWidth = on ? 2 : 1;
+      ctx.beginPath(); ctx.roundRect(x, y, node.w * 2, node.h * 2, 5); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = on ? '#172e21' : '#f3f7e8';
+      ctx.fillText(node.label, node.x, node.y);
     }
   }
 
@@ -128,9 +213,9 @@
     if (!drag || drag.id !== event.pointerId) return;
     if (drag.distance < 6) {
       const rect = canvas.getBoundingClientRect();
-      const hits = projected.map(p => ({p, d: Math.hypot(p.x - event.clientX + rect.left, p.y - event.clientY + rect.top)}));
-      const nearest = hits.sort((a, b) => a.d - b.d)[0];
-      if (nearest.d <= 22) inspect(nearest.p.node.id, true);
+      const x = event.clientX - rect.left, y = event.clientY - rect.top;
+      const hit = [...projected].reverse().find(p => Math.abs(x - p.x) <= p.w + 3 && Math.abs(y - p.y) <= p.h + 5);
+      if (hit) inspect(hit.node.id, true);
     }
     drag = null;
   });
