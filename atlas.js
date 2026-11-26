@@ -199,14 +199,29 @@
   });
   canvas.addEventListener('pointerdown', event => {
     if (!event.isPrimary || event.button !== 0) return;
-    drag = {id: event.pointerId, x: event.clientX, y: event.clientY, distance: 0};
+    drag = {id: event.pointerId, startX: event.clientX, startY: event.clientY, x: event.clientX, y: event.clientY, distance: 0};
     canvas.setPointerCapture(drag.id);
   });
+  function isTouchOrbit(x, y) {
+    if (!drag.axis) {
+      const dx = Math.abs(x - drag.startX), dy = Math.abs(y - drag.startY);
+      if (Math.max(dx, dy) > 4) drag.axis = dx > dy ? 'orbit' : 'scroll';
+    }
+    return drag.axis === 'orbit';
+  }
+  // Claim a one-finger horizontal orbit before the browser starts a fling.
+  // A vertical gesture still belongs to the page's native scroll.
+  canvas.addEventListener('touchmove', event => {
+    if (!drag || event.touches.length !== 1 || !event.cancelable) return;
+    const finger = event.touches[0];
+    if (isTouchOrbit(finger.clientX, finger.clientY)) event.preventDefault();
+  }, {passive: false});
   canvas.addEventListener('pointermove', event => {
     if (!drag || drag.id !== event.pointerId) return;
     const dx = event.clientX - drag.x, dy = event.clientY - drag.y;
     drag.distance += Math.hypot(dx, dy);
     drag.x = event.clientX; drag.y = event.clientY;
+    if (event.pointerType === 'touch' && !isTouchOrbit(event.clientX, event.clientY)) return;
     if (drag.distance > 4) rotate(dx * .009, dy * .006);
   });
   canvas.addEventListener('pointerup', event => {
