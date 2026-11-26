@@ -14,8 +14,8 @@
     <section class="hero" aria-labelledby="atlas-title">
       <div class="layout">
         <div class="intro"><p class="kicker">Balancer Vault / Replay architecture</p><h1 id="atlas-title">Evidence<br><em>atlas.</em></h1>
-          <p class="lead">Follow a transfer observation from archived receipts to a reviewer’s packet. Each connection identifies evidence used by the next component.</p>
-          <a class="textlink" href="./#packet">Open the reviewer packet ↗</a>
+          <p class="lead">Trace a Vault observation from archived receipts to a verified packet. Arrows point to the component that uses the evidence.</p>
+          <a class="textlink" href="./#packet">Open the reviewer packet</a>
         </div>
         <section id="viewer" hidden aria-label="Interactive evidence atlas">
           <div class="panel-head"><strong>Evidence flow</strong><div class="picker"><label for="component">Inspect</label> <select id="component"></select></div></div>
@@ -27,32 +27,32 @@
     </section>
     <section id="directory" class="directory"><div class="heading"><p class="kicker">Source directory</p><h2>Trace the dependencies</h2></div>
       <div class="cards">
-        <article id="archive" data-position="-178 -75 5" data-label="Receipts">
+        <article id="archive" data-position="0 -120 -15" data-label="Receipts">
           <p class="kind">Evidence input</p><h3>Archived receipts</h3><p class="meaning">Three receipt projections pin the expected block hashes, receipt coverage and qualifying transfer logs.</p>
           <p class="inputs">Inputs · Archived receipt projections</p>
           <a class="source" href="https://github.com/EauDoon/Vision/blob/main/fixtures/balancer-vault/README.md">fixtures/balancer-vault/README.md</a>
         </article>
-        <article id="fixture" data-position="-75 -78 85" data-label="Fixture replay">
+        <article id="fixture" data-position="-130 -50 10" data-label="Fixture replay">
           <p class="kind">Importer</p><h3>Fixture replay</h3><p class="meaning">The importer runs against constructed RPC responses. Its projection checks the expected Vault rows against archived receipts.</p>
           <p class="inputs">Inputs · <a href="#archive">Archived receipts</a></p>
           <a class="source" href="https://github.com/EauDoon/Vision/blob/main/transfer_review.py">transfer_review.py</a>
         </article>
-        <article id="capture" data-position="120 -81 -45" data-label="Capture">
+        <article id="capture" data-position="138 -52 15" data-label="Capture">
           <p class="kind">Evidence input</p><h3>Provider capture</h3><p class="meaning">A dated, bounded provider read records attempts, missing responses and returned witnesses for each of the three blocks. The dashboard reads the saved capture.</p>
           <p class="inputs">Inputs · <a href="#archive">Archived receipts</a></p>
           <a class="source" href="https://github.com/EauDoon/Vision/blob/main/capture_providers.py">capture_providers.py</a>
         </article>
-        <article id="compare" data-position="0 -4 -16" data-label="Compare">
+        <article id="compare" data-position="0 12 55" data-label="Compare">
           <p class="kind">Decision</p><h3>Replay comparison</h3><p class="meaning">The comparison checks headers, transfer fields and witness coverage per source and block. Diagnostic edits are labeled separately.</p>
           <p class="inputs">Inputs · <a href="#fixture">Fixture replay</a> + <a href="#capture">Provider capture</a></p>
           <a class="source" href="https://github.com/EauDoon/Vision/blob/main/replay_compare.py">replay_compare.py</a>
         </article>
-        <article id="packet" data-position="115 80 40" data-label="Packet">
+        <article id="packet" data-position="-138 82 15" data-label="Packet">
           <p class="kind">Export</p><h3>Reviewer packet</h3><p class="meaning">The static exporter packages the complete comparison, the archive license and dashboard files. Filters affect only the displayed view.</p>
           <p class="inputs">Inputs · <a href="#compare">Replay comparison</a></p>
           <a class="source" href="https://github.com/EauDoon/Vision/blob/main/publish_report.py">publish_report.py</a>
         </article>
-        <article id="verify" data-position="-105 90 -35" data-label="Verify">
+        <article id="verify" data-position="130 103 -5" data-label="Verify">
           <p class="kind">Verification</p><h3>Offline verifier</h3><p class="meaning">The verifier rebuilds the expected packet and checks its canonical SHA-256. A separately supplied provider capture must accompany its packet.</p>
           <p class="inputs">Inputs · <a href="#packet">Reviewer packet</a> + <a href="#compare">Replay comparison</a></p>
           <a class="source" href="https://github.com/EauDoon/Vision/blob/main/replay_compare.py">replay_compare.py</a>
