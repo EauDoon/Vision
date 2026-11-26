@@ -1,4 +1,4 @@
-"""The static replay site is a reproducible five-file export."""
+"""The static replay site is a reproducible offline export."""
 import tempfile
 import unittest
 from pathlib import Path
@@ -10,7 +10,7 @@ from replay_compare import packet_bytes
 class StaticReplaySite(unittest.TestCase):
     def test_new_directories_get_only_the_public_report_bytes(self):
         expected = {name: (ASSET_DIR / name).read_bytes()
-                    for name in ("index.html", "style.css", "review.js")}
+                    for name in ("index.html", "style.css", "review.js", "atlas.html", "atlas.js", "atlas.css")}
         expected["packet.json"] = packet_bytes()
         expected["archive-LICENSE.txt"] = ARCHIVE_LICENSE.read_bytes()
         with tempfile.TemporaryDirectory() as folder:

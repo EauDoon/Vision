@@ -54,7 +54,7 @@ class Workbench(unittest.TestCase):
 
     def test_02_search_types_and_dataset_labels(self):
         status=self.req('/api/status')[1]
-        self.assertEqual(status['version'],'1.3.0')
+        self.assertEqual(status['version'],'1.4.0')
         self.assertEqual(status['demo_address'],DEMO_ADDRESS)
         for q in ('Atlas',DEMO_ADDRESS,'eip155:1:'+DEMO_ADDRESS):
             data=self.req('/api/search?q='+quote(q))[1]

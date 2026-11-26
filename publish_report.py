@@ -1,4 +1,4 @@
-"""Build a static copy of the v1.3 replay comparison in a new directory."""
+"""Build a static copy of the replay comparison and evidence atlas in a new directory."""
 import argparse
 from contextlib import ExitStack
 from pathlib import Path
@@ -9,7 +9,7 @@ from replay_compare import packet_bytes
 ROOT = Path(__file__).resolve().parent
 ASSET_DIR = ROOT / "static" / "replay"
 ARCHIVE_LICENSE = ROOT / "fixtures" / "balancer-vault" / "LICENSE"
-ASSETS = ("index.html", "review.js", "style.css")
+ASSETS = ("index.html", "review.js", "style.css", "atlas.html", "atlas.js", "atlas.css")
 
 
 def publish(output):

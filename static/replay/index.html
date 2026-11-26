@@ -16,8 +16,8 @@
     <header class="mast">
       <div class="wrap mast-inner">
         <a href="#top" class="wordmark" aria-label="Vision home"><svg width="30" height="30" viewBox="0 0 32 32" aria-hidden="true" fill="none"><path d="M2 16 9 6h14l7 10-7 10H9z" stroke="currentColor" stroke-width="2"/><path d="m7 16 5-6h8l5 6-5 6h-8z" stroke="currentColor" stroke-width="1.6"/><circle cx="16" cy="16" r="3.4" fill="currentColor"/></svg><span>Vision</span></a>
-        <span class="edition">Evidence workbench <b>/</b> v1.3</span>
-        <nav aria-label="Report"><a href="#observations">Comparisons</a><a href="#packet">Reviewer packet</a><a id="previous-report" href="https://eaudoon.github.io/Vision/v1.2/">v1.2 review <span aria-hidden="true">↗</span></a></nav>
+        <span class="edition">Evidence workbench <b>/</b> v1.4</span>
+        <nav aria-label="Report"><a href="#observations">Comparisons</a><a href="#packet">Reviewer packet</a><a href="./atlas.html">Evidence atlas</a><a id="previous-report" href="https://eaudoon.github.io/Vision/v1.2/">v1.2 review <span aria-hidden="true">↗</span></a></nav>
       </div>
     </header>
     <section class="wrap intro" aria-labelledby="study-title">
@@ -211,6 +211,10 @@
       <div class="scope-line"><span>Vault contract</span> <code id="vault"></code></div>
       <section id="observations" aria-labelledby="results-title">
         <div class="section-heading"><div><p class="chapter">01 <span>/</span> Observation index</p><h2 id="results-title">Block comparisons</h2></div><p id="result-count" role="status"></p></div>
+        <details class="matrix"><summary>Compare sources side by side</summary>
+          <p>Choose a decision to inspect the underlying observation. Diagnostic rows follow the checkbox below.</p>
+          <div class="matrix-scroll" tabindex="0" role="region" aria-label="Source and block decisions"><table id="matrix"></table></div>
+        </details>
         <div class="filters" role="group" aria-label="Filter comparisons">
           <label>Block<select id="block-filter"><option value="">All blocks</option></select></label>
           <label>Source<select id="source-filter"><option value="">All sources</option></select></label>
@@ -220,6 +224,7 @@
         <button id="reset-filters" type="button" hidden>Clear filters</button>
         <p id="view-link-unavailable" role="status" hidden>The filters changed, but this browser could not update the shareable address.</p>
         <p class="diagnostic-note" id="diagnostic-note" hidden>Diagnostic examples alter copies of fixture observations to show how disagreement and missing evidence appear.</p>
+        <a id="download-selection" download="vision-replay-selection.json" class="selection-link">Download visible comparison summaries</a>
         <div id="results"></div>
         <div id="empty" class="empty" hidden><p>No comparisons match these filters.</p></div>
       </section>
