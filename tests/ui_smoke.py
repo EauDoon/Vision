@@ -329,6 +329,48 @@ def exercise_atlas_and_matrix(page, expect, base):
         context.close()
 
 
+def exercise_atlas_touch(browser, base):
+    """Use a real gesture stream so Chromium can recognize (or suppress) the next tap."""
+    context = browser.new_context(viewport={"width": 390, "height": 844}, is_mobile=True, has_touch=True)
+    try:
+        page = context.new_page()
+        page.goto(base + "/replay/atlas.html")
+        page.locator("#viewer").wait_for()
+        page.locator("#viewer").evaluate("el => scrollBy(0, el.getBoundingClientRect().top - 10)")
+        canvas = page.locator("#scene")
+        initial = canvas.evaluate("c => c.toDataURL()")
+        box = canvas.bounding_box()
+        x, y = box["x"] + 80, box["y"] + 100
+        cdp = context.new_cdp_session(page)
+
+        def touch(kind, px=None, py=None):
+            points = [] if px is None else [{"x": px, "y": py}]
+            cdp.send("Input.dispatchTouchEvent", {"type": kind, "touchPoints": points})
+
+        touch("touchStart", x, y)
+        for offset in (40, 80):
+            page.wait_for_timeout(40)
+            touch("touchMove", x + offset, y)
+        touch("touchEnd")
+        assert canvas.evaluate("c => c.toDataURL()") != initial
+        reset = page.locator("#reset").bounding_box()
+        page.wait_for_timeout(50)
+        # Send one physical tap to the visible button without Playwright retries.
+        page.touchscreen.tap(reset["x"] + reset["width"]/2, reset["y"] + reset["height"]/2)
+        page.wait_for_function("expected => document.querySelector('#scene').toDataURL() === expected", arg=initial)
+
+        scroll = page.evaluate("scrollY")
+        touch("touchStart", x, y)
+        for offset in (40, 80):
+            page.wait_for_timeout(40)
+            touch("touchMove", x, y - offset)
+        touch("touchEnd")
+        page.wait_for_function("start => scrollY > start + 20", arg=scroll)
+        assert canvas.evaluate("c => c.toDataURL()") == initial
+    finally:
+        context.close()
+
+
 def capture_screens(page, out, prefix=""):
     out.mkdir(parents=True, exist_ok=True)
     for name, width, height in (("desktop", 1440, 900), ("mobile", 390, 844)):
@@ -485,6 +527,7 @@ def main():
                     assert index, "Empty indexed-evidence export"
                     exercise_replay_dashboard(page, expect, base, args.app_root, destination)
                     exercise_atlas_and_matrix(page, expect, base)
+                    exercise_atlas_touch(browser, base)
                     assert not js_errors, js_errors
                     print("PASS: loopback workbench, Vault review, replay dashboard filters, row diffs, responsive layouts and verified packet downloads.")
                 finally:
