@@ -1,3 +1,5 @@
+<p align="center"><img src=".github/assets/banner.svg" alt="Vision. An evidence-first workbench for Ethereum: search an address or transaction, inspect the transfers behind a label, and export exactly what the local index saw. A replay comparison checks an importer against archived receipts block by block. Shown as two rows of three blocks under a scanning frame; two pairs match in green and one differs in amber." width="100%"></p>
+
 # Vision
 
 **An evidence-first workbench for Ethereum.** Search an address or transaction, inspect the transfers behind a label, and export exactly what the local index saw. A separate fictional case shows how verified economic records can be reconciled without guessing who owns a wallet or how much tax they owe.
