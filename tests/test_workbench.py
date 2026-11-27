@@ -187,3 +187,23 @@ class Workbench(unittest.TestCase):
             argv = ['app.py', '--replay-capture', str(path), '--port', '0', '--db', str(Path(temp) / 'db')]
             with patch('sys.argv', argv), patch('app.os.umask'), patch.object(VisionServer, 'serve_forever', inspect_server):
                 app.main()
+
+    def test_11_unusable_database_path_stops_with_a_message(self):
+        import app
+        import contextlib
+        import io
+        from unittest.mock import patch
+
+        with tempfile.TemporaryDirectory() as temp:
+            corrupt = Path(temp) / 'not-a-database.sqlite3'
+            corrupt.write_bytes(b'This file is not an SQLite database.\n' * 8)
+            for target in (temp, str(corrupt)):
+                argv = ['app.py', '--port', '0', '--db', target]
+                stderr = io.StringIO()
+                with patch('sys.argv', argv), patch('app.os.umask'), contextlib.redirect_stderr(stderr), \
+                        patch.object(VisionServer, 'serve_forever', lambda server: self.fail('server started')):
+                    with self.assertRaises(SystemExit) as stopped:
+                        app.main()
+                self.assertEqual(stopped.exception.code, 1)
+                self.assertTrue(stderr.getvalue().startswith('Cannot start Vision: '))
+                self.assertNotIn('Traceback', stderr.getvalue())
