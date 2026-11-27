@@ -2,6 +2,7 @@
 import argparse
 import json
 import os
+import sqlite3
 import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -210,8 +211,10 @@ class Handler(BaseHTTPRequestHandler):
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--port",type=int,default=8765)
-    parser.add_argument("--db",default=os.getenv("VISION_DB","./data/vision.sqlite3"))
+    parser.add_argument("--port",type=int,default=8765,
+                        help="Loopback port to listen on (default: 8765; 0 picks a free port).")
+    parser.add_argument("--db",default=os.getenv("VISION_DB","./data/vision.sqlite3"),metavar="FILE",
+                        help="SQLite index file, created if missing (default: $VISION_DB or ./data/vision.sqlite3).")
     parser.add_argument("--replay-capture", type=Path, metavar="FILE",
                         help="Show this saved provider capture in the replay dashboard.")
     args=parser.parse_args()
@@ -220,7 +223,7 @@ def main():
     try:
         capture = replay_compare.read_json(args.replay_capture) if args.replay_capture else None
         server = VisionServer(args.port, Store(args.db), os.getenv("VISION_RPC_URL"), replay_capture=capture)
-    except (OSError, ValueError, RecursionError) as exc:
+    except (OSError, ValueError, RecursionError, sqlite3.Error) as exc:
         parser.exit(1, f"Cannot start Vision: {exc}\n")
     with server:
         print(f"Vision {VERSION} · http://127.0.0.1:{server.server_port} · Ctrl+C to stop",flush=True)

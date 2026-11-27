@@ -4,17 +4,62 @@
 
 **v1.4.0 · Python ≥3.10 · SQLite · Single-user research workbench.** The bundled reports run offline with the Python standard library.
 
-## Trace a replay observation
+## What it is
 
-The [evidence atlas](https://eaudoon.github.io/Vision/atlas.html) connects the pinned archive, constructed importer replay, dated provider capture, comparison, packet and verifier. Start the workbench and choose **Evidence atlas** for the local version. Drag the map or use its arrow keys to rotate. Choose a component to inspect its source and inputs. The component URL reopens that selection. A source directory also works with JavaScript disabled. The expandable read-only query shows the selected component as local JSON.
+Vision is a local Python workbench with three parts that stay separate:
 
-In the replay comparison, open **Compare sources side by side** and choose a cell to inspect one source and block. **Download visible comparison summaries** exports decisions and counts for the current filters with the source packet digest. A missing observation has a null count. Use **Download JSON** in the reviewer packet section for the complete verifiable evidence. Shared filters now survive the local redirect from `/replay` to `/replay/`.
+- **Chain explorer.** Index a bounded range of finalized Ethereum blocks for one address into SQLite, then search and export exactly what was indexed. Six fictional sample records are included.
+- **Replay comparison.** Check whether Vision's importer recovers the same ERC-20-shaped transfers as archived receipts for the Balancer Vault in three pinned mainnet blocks, with a reviewer packet you can verify offline.
+- **Fictional reconciliation case.** A worked FIFO cost-basis example with invented numbers. It blocks the result when evidence is missing.
+
+It is for analysts and developers who want to see the evidence behind a label or a number. It does not attribute wallets to people, classify transfers as sales or income, or compute tax owed. There is nothing to install: every bundled view runs offline on the Python standard library.
+
+## Quick start
+
+You need Python 3.10 or later and Git. Nothing is installed and no network call is made.
+
+```bash
+git clone https://github.com/EauDoon/Vision.git
+cd Vision
+python3 app.py
+```
+
+On Windows, use `py -3 app.py`. The server prints its address and listens on loopback only. Open **http://127.0.0.1:8765**. If that port is taken, pass another one, for example `python3 app.py --port 8766`. `python3 app.py --help` lists the options. The index is created at `./data/vision.sqlite3` unless you pass `--db`.
+
+In a second terminal, export the replay comparison packet and verify it against the pinned archive:
+
+```bash
+python3 replay_compare.py > vision-replay-review.json
+python3 replay_compare.py --verify vision-replay-review.json
+```
+
+The second command prints `Verified comparison packet` followed by the packet SHA-256.
+
+No clone at hand? Open the [published replay comparison](https://eaudoon.github.io/Vision/) and [evidence atlas](https://eaudoon.github.io/Vision/atlas.html) in a browser.
+
+| To do this | Go to |
+| --- | --- |
+| Walk through the explorer, labels and fictional case | [Walk through the workbench](#walk-through-the-workbench) |
+| Compare archive, replay and public sources | [Compare Balancer Vault replays](#compare-balancer-vault-replays) |
+| Read the worked cost-basis example | [The illustrated report](#the-illustrated-report-one-sale-two-cost-lots) |
+| Index live blocks from your own provider | [Crawl actual blocks](#crawl-actual-blocks) |
+| Run the checks | [Verify](#verify) |
+| See what changed by release | [Changelog](CHANGELOG.md) |
+
+## Walk through the workbench
+
+With the server from the quick start running, open **http://127.0.0.1:8765**.
+
+1. **Chain explorer → Open sample address.** The six records are fictional and marked **SYNTHETIC**. Select a transaction to open the underlying block, amount, contract and log index. Search also recognizes tx hashes, block hashes/heights, event IDs, asset identifiers and chain-qualified accounts.
+2. **Label directory → search “USDC”.** This is a sourced public *contract reference*, not a statement about anybody who touched it. A correct label with no indexed transfers is a valid result.
+3. **Reconciliation.** The fictional disposal has $5,000 of proceeds and $2,750 of matched FIFO basis: $2,250 of reconstructed gains against $2,000 declared. Income is $180 against $100 declared. Change the declared amounts in the unsaved what-if, inspect source lots, or save a review note on the baseline.
+4. **Export.** Explorer exports the current bounded search and supporting crawl windows. Case export includes synthetic input, rule-pack version, source/price references, reviewed findings and SHA-256 checksums. A checksum detects changes; it is not a signature.
 
 ## Compare Balancer Vault replays
 
-Replay filters travel with the page URL. Copy the address after choosing a block, source or decision; reopening it restores the same view of the bundled packet. Diagnostic examples remain opt-in. **Clear filters** returns to the nine non-diagnostic comparisons from any filtered view. If the browser cannot update the address, the filters still work and show a warning before you share it. The release check is to reopen a filtered public link and confirm that the complete downloaded packet still matches the pinned digest.
-
 Which sources recovered the archived transfers, and what explains each difference? Open the [published replay comparison](https://eaudoon.github.io/Vision/) or start `python3 app.py` and open the [local dashboard](http://127.0.0.1:8765/replay/). Pick a block and source to inspect its rows, block hashes, receipt witnesses and filter coverage. Enable the labeled diagnostic examples to explore a disagreement or an incomplete observation.
+
+Replay filters travel with the page URL. Copy the address after choosing a block, source or decision; reopening it restores the same view of the bundled packet. Diagnostic examples remain opt-in. **Clear filters** returns to the nine non-diagnostic comparisons from any filtered view. If the browser cannot update the address, the filters still work and show a warning before you share it.
 
 The archive and constructed importer replay cover the same three Ethereum mainnet blocks. The public-source entries record the outcome of a dated, bounded read. The dashboard can be used offline with the bundled capture. Check the downloaded reviewer JSON from the repository root.
 
@@ -23,6 +68,12 @@ python3 replay_compare.py --verify vision-replay-review.json
 ```
 
 For the release evidence and the public capture procedure, see the [v1.3 notes](docs/V1.3.md) and [operations guide](docs/OPERATIONS.md).
+
+## Trace a replay observation
+
+The [evidence atlas](https://eaudoon.github.io/Vision/atlas.html) connects the pinned archive, constructed importer replay, dated provider capture, comparison, packet and verifier. Start the workbench and choose **Evidence atlas** for the local version. Drag the map or use its arrow keys to rotate. Choose a component to inspect its source and inputs. The component URL reopens that selection. A source directory also works with JavaScript disabled. The expandable read-only query shows the selected component as local JSON.
+
+In the replay comparison, open **Compare sources side by side** and choose a cell to inspect one source and block. **Download visible comparison summaries** exports decisions and counts for the current filters with the source packet digest. A missing observation has a null count. Use **Download JSON** in the reviewer packet section for the complete verifiable evidence.
 
 ## v1.2 Balancer Vault snapshot
 
@@ -51,21 +102,6 @@ A fictional sale brings in **$5,000**, but only **$2,250 is gain**: the oldest u
 **Fastest:** [download the single-file illustrated report](https://github.com/EauDoon/Vision/raw/refs/heads/main/static/vision-field-note.html) and open it in a browser. The chart and styles are embedded.
 
 **With the workbench:** download the [source ZIP](https://github.com/EauDoon/Vision/archive/refs/heads/main.zip), extract it, and open `static/report.html` in a browser, keeping its sibling CSS and SVG files alongside it. No install, server or network is needed. From the running app, choose **Read the fictional case**. Use your browser’s Print / Save as PDF to keep a copy. [Read the worked example and reproduction steps on GitHub](docs/FIELD-NOTE.md).
-
-## Try it in two minutes
-
-From the folder containing `app.py`:
-
-```bash
-python3 app.py
-```
-
-On Windows, use `py -3 app.py`. Open **http://127.0.0.1:8765**. For a different local port or database, pass `--port` and `--db`. The default database is `./data/vision.sqlite3` relative to the working directory.
-
-1. **Chain explorer → Open sample address.** The six records are fictional and marked **SYNTHETIC**. Select a transaction to open the underlying block, amount, contract and log index. Search also recognizes tx hashes, block hashes/heights, event IDs, asset identifiers and chain-qualified accounts.
-2. **Label directory → search “USDC”.** This is a sourced public *contract reference*, not a statement about anybody who touched it. A correct label with no indexed transfers is a valid result.
-3. **Reconciliation.** The fictional disposal has $5,000 of proceeds and $2,750 of matched FIFO basis: $2,250 of reconstructed gains against $2,000 declared. Income is $180 against $100 declared. Change the declared amounts in the unsaved what-if, inspect source lots, or save a review note on the baseline.
-4. **Export.** Explorer exports the current bounded search and supporting crawl windows. Case export includes synthetic input, rule-pack version, source/price references, reviewed findings and SHA-256 checksums. A checksum detects changes; it is not a signature.
 
 ## Crawl actual blocks
 
